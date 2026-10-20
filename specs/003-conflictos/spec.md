@@ -1,6 +1,6 @@
 # Spec 003 — Conflictos y concurrencia
 
-- **Estado:** Borrador
+- **Estado:** En curso
 - **Dueños:** backend: A · frontend: B
 - **Depende de:** 002
 
@@ -43,7 +43,7 @@ mismo bloque **al mismo tiempo**, solo uno puede ganar. Esto no se resuelve
 
 - Lista de espera cuando un bloque está ocupado.
 - Garantía atómica de RN-06 y RN-07 (se validan con una consulta previa;
-  ver ADR 0002 si deciden hacerlas atómicas).
+  hacerlas atómicas requiere un ADR nuevo).
 
 ## Preguntas abiertas
 
