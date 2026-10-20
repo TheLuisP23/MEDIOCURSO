@@ -1,6 +1,7 @@
 # ADR 0001 — Monorepo y arquitectura serverless en AWS
 
-- **Estado:** Aceptada
+- **Estado:** Aceptada; el punto 3 (serverless con SAM) lo reemplaza el
+  [ADR 0002](0002-ec2-terraform.md)
 - **Fecha:** (fecha del primer commit)
 
 ## Contexto

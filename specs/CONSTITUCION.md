@@ -41,8 +41,10 @@ otra persona —o su agente— continúe **sin preguntar nada por chat**.
 - Preferir código aburrido y legible a código ingenioso.
 
 ## Art. 8 — Nube sin sorpresas
-Toda la infraestructura está en `infra/template.yaml` (AWS SAM). No se crean
-recursos a mano en la consola. Diseño serverless para costo cercano a cero.
+Toda la infraestructura está descrita con Terraform en `infra/` (ver ADR 0002).
+No se crean recursos a mano en la consola: el único paso manual es ejecutar
+una vez el arranque inicial (`infra/bootstrap/`), que también es código.
+Costo mínimo: una sola instancia pequeña y servicios con capa gratuita.
 
 ## Art. 9 — Idioma y estilo
 - Identificadores, comentarios, specs y commits **en español**.
