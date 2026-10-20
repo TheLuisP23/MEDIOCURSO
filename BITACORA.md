@@ -72,3 +72,22 @@ Formato de cada entrada:
   - A: spec 005 T1 (`infra/bootstrap/`) en `feat/005-terraform`.
 - **Bloqueos / preguntas para la otra persona:** hasta la spec 003, reservar un
   bloque ya ocupado lo **sobrescribe** (no hay 409 todavía). Sofia: revisa P3 en el PR #6.
+
+## 2026-10-20 16:20 — A (Claude Code) — rama `feat/003-back`
+- **Spec/tareas:** 003 · T1–T4 (todo el backend)
+- **Hecho:** Spec 003 aprobada por A (no tenía preguntas abiertas), planificada
+  e implementada en backend: RN-05 atómica (memoria y DynamoDB con
+  `attribute_not_exists(pk)`), RN-06 y RN-07 con consulta al índice `porUsuario`.
+  Test de concurrencia CA-12: 10 peticiones simultáneas → 1×201 y 9×409.
+  PR #5 y #6 mergeados a `main`.
+- **Estado de check:** verde (backend 34/34, frontend 2/2).
+- **Decisiones:** orden en `POST /reservas`: … RN-04 → RN-07 (409) → RN-06 (422)
+  → RN-05 (409). El tipo `Reserva` pasa a `dominio/reservas.ts` (Art. 4);
+  `repos/reservas.ts` lo reexporta. RN-06/RN-07 no son atómicas (fuera de alcance).
+- **Pendiente / siguiente paso:**
+  - A: mergear PR #7 (backend 002) y luego el de esta rama; después spec 005 T1.
+  - B: spec 002 T7–T10 y luego spec 003 T5 (si `crearReserva` falla con 409
+    `BLOQUE_OCUPADO`: mostrar "Alguien acaba de reservar este bloque" y recargar
+    la grilla; test CA-13 en `frontend/test/ReservarBloque.test.tsx`).
+- **Bloqueos / preguntas para la otra persona:** ninguno. Esta rama parte de
+  `feat/002-back` (PR #7): mergear el #7 primero.
