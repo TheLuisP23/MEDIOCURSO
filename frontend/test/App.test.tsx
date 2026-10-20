@@ -11,7 +11,14 @@ describe("App", () => {
   it("muestra 'API conectada' cuando /api/health responde ok", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(new Response(JSON.stringify({ estado: "ok" }), { status: 200 })),
+      vi.fn((entrada: RequestInfo | URL) => {
+        const cuerpo = String(entrada).endsWith("/health")
+          ? { estado: "ok" }
+          : [];
+        return Promise.resolve(
+          new Response(JSON.stringify(cuerpo), { status: 200 }),
+        );
+      }),
     );
     render(<App />);
     expect(await screen.findByText("API conectada")).toBeTruthy();

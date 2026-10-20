@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
+import { ListaLaboratorios } from "./componentes/ListaLaboratorios";
 
 type EstadoApi = "cargando" | "ok" | "caida";
 
@@ -23,7 +24,7 @@ export function App() {
           {estado === "caida" && "No se pudo conectar con la API"}
         </p>
       </header>
-      {/* Spec 001: aquí va el listado de laboratorios (src/componentes/) */}
+      <ListaLaboratorios />
     </main>
   );
 }

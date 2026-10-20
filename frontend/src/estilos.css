@@ -31,3 +31,24 @@ body {
 .estado-caida {
   color: var(--error);
 }
+
+.lista-laboratorios {
+  margin-top: 32px;
+}
+
+.tarjetas-laboratorios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.tarjeta-laboratorio {
+  padding: 16px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: white;
+}
+
+.tarjeta-laboratorio h3 {
+  margin-top: 0;
+}
