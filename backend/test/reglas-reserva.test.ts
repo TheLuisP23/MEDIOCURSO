@@ -1,13 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { ErrorNegocio } from "../src/dominio/errores.js";
 import {
+  asegurarBloqueLibre,
   esReservable,
   idReserva,
   validarAnticipacion,
   validarBloque,
   validarLaboratorio,
+  validarLimiteDiario,
   validarNoPasado,
+  validarSinChoque,
 } from "../src/dominio/reservas.js";
+import type { Reserva } from "../src/repos/reservas.js";
+
+function reservaDe(laboratorioId: string, hora: string): Reserva {
+  return {
+    id: idReserva(laboratorioId, "2026-11-06", hora),
+    laboratorioId,
+    fecha: "2026-11-06",
+    hora,
+    usuario: "20231234",
+    creadaEn: "2026-11-05T15:30:00.000Z",
+  };
+}
 
 // Jueves 5 de noviembre de 2026, 10:30 en Lima.
 const ahora = new Date("2026-11-05T10:30:00-05:00");
@@ -60,6 +75,24 @@ describe("reglas de reserva (dominio)", () => {
     expect(esReservable("2026-11-05", "10:00", ahora)).toBe(false);
     expect(esReservable("2026-11-08", "11:00", ahora)).toBe(false);
     expect(esReservable("2026-11-20", "11:00", ahora)).toBe(false);
+  });
+
+  it("RN-05: si el bloque ya tenía reserva, responde BLOQUE_OCUPADO", () => {
+    expect(codigoDeError(() => asegurarBloqueLibre(false))).toBe("BLOQUE_OCUPADO");
+    expect(codigoDeError(() => asegurarBloqueLibre(true))).toBeUndefined();
+  });
+
+  it("RN-06: un usuario no puede tener más de 2 bloques en el día", () => {
+    const una = [reservaDe("LAB-101", "08:00")];
+    const dos = [...una, reservaDe("LAB-102", "09:00")];
+    expect(codigoDeError(() => validarLimiteDiario(una))).toBeUndefined();
+    expect(codigoDeError(() => validarLimiteDiario(dos))).toBe("LIMITE_DIARIO");
+  });
+
+  it("RN-07: un usuario no puede reservar la misma hora en otro laboratorio", () => {
+    const delDia = [reservaDe("LAB-101", "10:00")];
+    expect(codigoDeError(() => validarSinChoque(delDia, "10:00", "LAB-102"))).toBe("CHOQUE_USUARIO");
+    expect(codigoDeError(() => validarSinChoque(delDia, "11:00", "LAB-102"))).toBeUndefined();
   });
 
   it("idReserva sigue el formato del contrato", () => {

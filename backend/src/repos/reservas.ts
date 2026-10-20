@@ -1,15 +1,11 @@
-/** Reserva tal como la define `Reserva` en docs/api/openapi.yaml. */
-export interface Reserva {
-  id: string;
-  laboratorioId: string;
-  fecha: string;
-  hora: string;
-  usuario: string;
-  creadaEn: string;
-}
+import type { Reserva } from "../dominio/reservas.js";
+
+export type { Reserva };
 
 /** Puerto de acceso a reservas. Implementaciones: memoria.ts y dynamo.ts. */
 export interface RepoReservas {
-  guardar(reserva: Reserva): Promise<void>;
+  /** Inserta si no existe una reserva con el mismo id, de forma atómica (RN-05). `false` = ya existía. */
+  guardar(reserva: Reserva): Promise<boolean>;
   delDia(laboratorioId: string, fecha: string): Promise<Reserva[]>;
+  delUsuarioEnDia(usuario: string, fecha: string): Promise<Reserva[]>;
 }

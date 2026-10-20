@@ -35,7 +35,7 @@ sus tareas estén marcadas y que cada `RN-xx` tenga un test que lo mencione.
 |------|-------------------------------|-----------|
 | 001  | Listado de laboratorios       | Implementada |
 | 002  | Disponibilidad y crear reserva| En curso  |
-| 003  | Conflictos y concurrencia     | Borrador  |
+| 003  | Conflictos y concurrencia     | En curso  |
 | 004  | Mis reservas y cancelación    | Borrador  |
 | 005  | Despliegue en AWS (EC2 + Terraform) | En curso  |
 
