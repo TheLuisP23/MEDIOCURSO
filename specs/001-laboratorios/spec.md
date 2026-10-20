@@ -1,6 +1,6 @@
 # Spec 001 — Listado de laboratorios
 
-- **Estado:** Aprobada
+- **Estado:** Implementada
 - **Dueños:** backend: A · frontend: B
 - **Depende de:** —
 

@@ -8,4 +8,4 @@ Cada tarea debe poder hacerse y commitearse sola, con `npm run check` en verde.
 - [x] T4 [F] Agregar tipo `Laboratorio` y `api.laboratorios()` (dueño: B)
 - [x] T5 [F] Tests CA-03, CA-04, CA-05 de `ListaLaboratorios` (dueño: B)
 - [x] T6 [F] Implementar `ListaLaboratorios` y usarlo en `App.tsx` (dueño: B)
-- [ ] T7 [D] Marcar spec como Implementada y actualizar índice en `specs/README.md` (dueño: B)
+- [x] T7 [D] Marcar spec como Implementada y actualizar índice en `specs/README.md` (dueño: B)
