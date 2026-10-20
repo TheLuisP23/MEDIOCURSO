@@ -2,6 +2,16 @@ import { esDomingo, HORAS_BLOQUE, hoyEnLima, instanteBloque, sumarDias } from ".
 import { ErrorNegocio } from "./errores.js";
 import { buscarLaboratorio } from "./laboratorios.js";
 
+/** Reserva tal como la define `Reserva` en docs/api/openapi.yaml. */
+export interface Reserva {
+  id: string;
+  laboratorioId: string;
+  fecha: string;
+  hora: string;
+  usuario: string;
+  creadaEn: string;
+}
+
 /** Días de anticipación máximos, incluido el último (RN-04). */
 export const DIAS_ANTICIPACION = 14;
 
@@ -40,6 +50,43 @@ export function validarAnticipacion(fecha: string, ahora: Date): void {
       "FUERA_DE_RANGO",
       `Solo se puede reservar con hasta ${DIAS_ANTICIPACION} días de anticipación.`,
       422,
+    );
+  }
+}
+
+/** Máximo de bloques por usuario y día, sumando laboratorios (RN-06). */
+export const MAX_BLOQUES_POR_DIA = 2;
+
+/** RN-05: `creada` es `false` si el repositorio ya tenía una reserva en ese bloque. */
+export function asegurarBloqueLibre(creada: boolean): void {
+  if (!creada) {
+    throw new ErrorNegocio("BLOQUE_OCUPADO", "Alguien acaba de reservar este bloque.", 409);
+  }
+}
+
+/** RN-06: con las reservas del usuario en ese día, no puede sumar otra si ya tiene el máximo. */
+export function validarLimiteDiario(reservasDelDia: readonly Reserva[]): void {
+  if (reservasDelDia.length >= MAX_BLOQUES_POR_DIA) {
+    throw new ErrorNegocio(
+      "LIMITE_DIARIO",
+      `Ya tienes ${MAX_BLOQUES_POR_DIA} bloques reservados ese día.`,
+      422,
+    );
+  }
+}
+
+/** RN-07: el usuario no puede tener otra reserva a la misma hora en otro laboratorio. */
+export function validarSinChoque(
+  reservasDelDia: readonly Reserva[],
+  hora: string,
+  laboratorioId: string,
+): void {
+  const choque = reservasDelDia.find((r) => r.hora === hora && r.laboratorioId !== laboratorioId);
+  if (choque) {
+    throw new ErrorNegocio(
+      "CHOQUE_USUARIO",
+      `Ya tienes una reserva a las ${hora} en ${choque.laboratorioId}.`,
+      409,
     );
   }
 }

@@ -3,11 +3,14 @@ import type { Dependencias } from "../app.js";
 import { esFechaValida } from "../dominio/bloques.js";
 import { ErrorNegocio } from "../dominio/errores.js";
 import {
+  asegurarBloqueLibre,
   idReserva,
   validarAnticipacion,
   validarBloque,
   validarLaboratorio,
+  validarLimiteDiario,
   validarNoPasado,
+  validarSinChoque,
 } from "../dominio/reservas.js";
 import { validarUsuario } from "../dominio/usuario.js";
 import type { Reserva } from "../repos/reservas.js";
@@ -34,7 +37,8 @@ export function rutasReservas({ repoReservas, ahora }: Dependencias) {
   const rutas = new Hono();
 
   rutas.post("/", async (c) => {
-    // Orden fijo: usuario (401) → cuerpo (400) → RN-01 (404) → RN-02, RN-03, RN-04 (422).
+    // Orden fijo: usuario (401) → cuerpo (400) → RN-01 (404) → RN-02, RN-03, RN-04 (422)
+    // → RN-07 (409) → RN-06 (422) → RN-05 (409).
     const usuario = validarUsuario(c.req.header("X-Usuario"));
     const cuerpo: unknown = await c.req.json().catch(() => null);
     if (!esNuevaReserva(cuerpo)) {
@@ -51,6 +55,11 @@ export function rutasReservas({ repoReservas, ahora }: Dependencias) {
     validarNoPasado(fecha, hora, instante);
     validarAnticipacion(fecha, instante);
 
+    // Spec 003: RN-07 y RN-06 con una consulta previa; RN-05 atómica al guardar.
+    const delUsuario = await repoReservas.delUsuarioEnDia(usuario, fecha);
+    validarSinChoque(delUsuario, hora, laboratorioId);
+    validarLimiteDiario(delUsuario);
+
     const reserva: Reserva = {
       id: idReserva(laboratorioId, fecha, hora),
       laboratorioId,
@@ -59,7 +68,7 @@ export function rutasReservas({ repoReservas, ahora }: Dependencias) {
       usuario,
       creadaEn: instante.toISOString(),
     };
-    await repoReservas.guardar(reserva);
+    asegurarBloqueLibre(await repoReservas.guardar(reserva));
     return c.json(reserva, 201);
   });
 
