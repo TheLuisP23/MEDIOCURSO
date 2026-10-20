@@ -1,0 +1,178 @@
+openapi: 3.1.0
+info:
+  title: API Reserva de Laboratorios
+  version: 0.1.0
+  description: |
+    Contrato ÚNICO entre backend y frontend (Constitución, Art. 2).
+    Cambiarlo requiere un PR propio revisado por la otra persona.
+    Fechas: AAAA-MM-DD. Horas: HH:00. Zona horaria de negocio: America/Lima (UTC−5).
+servers:
+  - url: /api
+paths:
+  /health:
+    get:
+      summary: Estado de la API
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estado: { type: string, const: ok }
+  /laboratorios:
+    get:
+      summary: Lista el catálogo de laboratorios (spec 001)
+      responses:
+        "200":
+          description: Catálogo ordenado por id
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Laboratorio" }
+  /laboratorios/{id}/disponibilidad:
+    get:
+      summary: Bloques de un laboratorio en una fecha (spec 002)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: fecha, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Los 15 bloques del día
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Disponibilidad" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /reservas:
+    post:
+      summary: Crea una reserva (specs 002 y 003)
+      parameters:
+        - $ref: "#/components/parameters/XUsuario"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NuevaReserva" }
+      responses:
+        "201":
+          description: Reserva creada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Reserva" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+  /reservas/mias:
+    get:
+      summary: Reservas futuras del usuario (spec 004)
+      parameters:
+        - $ref: "#/components/parameters/XUsuario"
+      responses:
+        "200":
+          description: Ordenadas por fecha y hora
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Reserva" }
+        "401": { $ref: "#/components/responses/Error" }
+  /reservas/{id}:
+    delete:
+      summary: Cancela una reserva propia (spec 004)
+      parameters:
+        - $ref: "#/components/parameters/XUsuario"
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Cancelada }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+components:
+  parameters:
+    XUsuario:
+      name: X-Usuario
+      in: header
+      required: true
+      description: Código de alumno, 6–12 caracteres alfanuméricos.
+      schema: { type: string, pattern: "^[A-Za-z0-9]{6,12}$" }
+  responses:
+    Error:
+      description: Error con código estable
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Laboratorio:
+      type: object
+      required: [id, nombre, capacidad, equipamiento]
+      properties:
+        id: { type: string, examples: ["LAB-101"] }
+        nombre: { type: string }
+        capacidad: { type: integer, minimum: 1 }
+        equipamiento:
+          type: array
+          items: { type: string }
+    Bloque:
+      type: object
+      required: [hora, disponible]
+      properties:
+        hora: { type: string, pattern: "^(0[7-9]|1[0-9]|2[01]):00$" }
+        disponible: { type: boolean }
+    Disponibilidad:
+      type: object
+      required: [laboratorioId, fecha, bloques]
+      properties:
+        laboratorioId: { type: string }
+        fecha: { type: string, format: date }
+        bloques:
+          type: array
+          minItems: 15
+          maxItems: 15
+          items: { $ref: "#/components/schemas/Bloque" }
+    NuevaReserva:
+      type: object
+      required: [laboratorioId, fecha, hora]
+      properties:
+        laboratorioId: { type: string }
+        fecha: { type: string, format: date }
+        hora: { type: string, examples: ["10:00"] }
+    Reserva:
+      type: object
+      required: [id, laboratorioId, fecha, hora, usuario, creadaEn]
+      properties:
+        id:
+          type: string
+          description: "Formato {laboratorioId}.{fecha}.{HH} — ej. LAB-101.2026-11-05.10"
+        laboratorioId: { type: string }
+        fecha: { type: string, format: date }
+        hora: { type: string }
+        usuario: { type: string }
+        creadaEn: { type: string, format: date-time }
+    Error:
+      type: object
+      required: [codigo, mensaje]
+      properties:
+        codigo:
+          type: string
+          enum:
+            - VALIDACION
+            - NO_AUTORIZADO
+            - LAB_NO_EXISTE
+            - BLOQUE_INVALIDO
+            - FECHA_PASADA
+            - FUERA_DE_RANGO
+            - BLOQUE_OCUPADO
+            - LIMITE_DIARIO
+            - CHOQUE_USUARIO
+            - PROHIBIDO
+            - CANCELACION_TARDIA
+            - RESERVA_NO_EXISTE
+        mensaje:
+          type: string
+          description: Texto en español, apto para mostrarse al usuario.

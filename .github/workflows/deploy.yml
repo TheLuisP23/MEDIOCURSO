@@ -1,0 +1,71 @@
+# Despliegue a AWS (spec 005). Se ejecuta en cada merge a main, pero SOLO si
+# la variable de repositorio DESPLIEGUE_ACTIVO vale "true" (así no falla antes
+# de configurar AWS). Configuración: docs/despliegue.md
+name: Despliegue
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: despliegue
+  cancel-in-progress: false
+
+jobs:
+  desplegar:
+    if: vars.DESPLIEGUE_ACTIVO == 'true'
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+      STACK: ${{ vars.STACK_NAME || 'reserva-labs' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Build (backend → backend/dist, frontend → frontend/dist)
+        run: npm run build
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/setup-sam@v3
+        with:
+          use-installer: true
+
+      - name: Desplegar infraestructura y backend (SAM)
+        run: |
+          PARAMS=""
+          if [ -n "${{ vars.LAB_ROLE_ARN }}" ]; then
+            PARAMS="--parameter-overrides LabRoleArn=${{ vars.LAB_ROLE_ARN }}"
+          fi
+          sam deploy \
+            --template-file infra/template.yaml \
+            --stack-name "$STACK" \
+            --resolve-s3 \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            $PARAMS
+
+      - name: Subir frontend a S3 e invalidar CloudFront
+        run: |
+          salida() {
+            aws cloudformation describe-stacks --stack-name "$STACK" \
+              --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text
+          }
+          BUCKET=$(salida BucketFrontend)
+          DIST=$(salida DistribucionId)
+          URL=$(salida UrlApp)
+          aws s3 sync frontend/dist "s3://$BUCKET" --delete
+          aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*" > /dev/null
+          echo "### 🚀 App desplegada: $URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Prueba: $URL/api/health" >> "$GITHUB_STEP_SUMMARY"

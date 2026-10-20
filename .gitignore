@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+.aws-sam/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+# Configuración personal de cada agente (no se comparte)
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Guía interna del equipo (no se sube al repositorio)
+GUIA_EQUIPO.md

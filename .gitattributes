@@ -1,0 +1,5 @@
+# Fin de línea LF para todos: evita conflictos "fantasma" entre Windows, Mac y Linux
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary

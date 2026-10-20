@@ -1,0 +1,2 @@
+# Sensor local: nadie (ni humano ni agente) puede commitear si esto falla.
+npm run check

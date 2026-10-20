@@ -1,0 +1,9 @@
+# Reemplaza USUARIO_A y USUARIO_B por los usuarios de GitHub de cada uno
+# y quita el "#" de las líneas. GitHub pedirá revisión al dueño automáticamente.
+#
+# /backend/          @USUARIO_A
+# /infra/            @USUARIO_A
+# /frontend/         @USUARIO_B
+# /specs/            @USUARIO_A @USUARIO_B
+# /docs/api/         @USUARIO_A @USUARIO_B
+# /AGENTS.md         @USUARIO_A @USUARIO_B

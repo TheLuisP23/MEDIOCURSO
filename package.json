@@ -1,0 +1,30 @@
+{
+  "name": "reserva-labs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema de reserva de laboratorios — proyecto SDD + harness engineering (back y front en un solo repo)",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "contexto": "node scripts/contexto-sesion.mjs",
+    "dev:back": "npm run dev -w backend",
+    "dev:front": "npm run dev -w frontend",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces",
+    "build": "npm run build --workspaces",
+    "check:specs": "node scripts/verificar-specs.mjs",
+    "check:skills": "node scripts/sync-skills.mjs --check",
+    "sync:skills": "node scripts/sync-skills.mjs",
+    "check": "npm run check:specs && npm run check:skills && npm run typecheck && npm run test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

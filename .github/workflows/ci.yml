@@ -1,0 +1,40 @@
+# Sensor remoto del harness: corre en cada push a una rama y en cada PR.
+# El job "check" se marca como obligatorio en la protección de main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["**"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Specs, skills, tipos y tests
+        run: npm run check
+      - name: Build
+        run: npm run build
+
+  infra:
+    name: infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install cfn-lint
+      - name: Validar plantilla SAM (CA-18)
+        run: cfn-lint infra/template.yaml

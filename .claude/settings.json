@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run check)",
+      "Bash(npm run check:*)",
+      "Bash(npm run test*)",
+      "Bash(npm run typecheck*)",
+      "Bash(npm run build*)",
+      "Bash(npm run contexto)",
+      "Bash(npm run sync:skills)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git fetch*)"
+    ],
+    "deny": [
+      "Bash(git push origin main*)",
+      "Bash(git push -f*)",
+      "Bash(git push --force *)",
+      "Bash(git commit --no-verify*)",
+      "Bash(git commit -n *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/contexto-sesion.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}
