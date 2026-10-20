@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { rutasLaboratorios } from "./rutas/laboratorios.js";
 
 /**
  * Punto de entrada HTTP de la API. Todas las rutas cuelgan de /api
@@ -12,8 +13,8 @@ export function crearApp() {
 
   app.get("/health", (c) => c.json({ estado: "ok" }));
 
-  // Las specs 001–004 registran aquí sus rutas, por ejemplo:
-  // app.route("/laboratorios", rutasLaboratorios(deps));
+  // Rutas de cada spec (las specs 002–004 agregan las suyas aquí).
+  app.route("/laboratorios", rutasLaboratorios());
 
   return app;
 }
