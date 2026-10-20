@@ -1,6 +1,6 @@
 # Spec 002 — Disponibilidad y crear reserva
 
-- **Estado:** Aprobada
+- **Estado:** En curso
 - **Dueños:** backend: A · frontend: B
 - **Depende de:** 001
 
