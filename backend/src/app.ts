@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { ErrorNegocio } from "./dominio/errores.js";
+import { RepoDynamo } from "./repos/dynamo.js";
 import { RepoMemoria } from "./repos/memoria.js";
 import type { RepoReservas } from "./repos/reservas.js";
 import { rutasLaboratorios } from "./rutas/laboratorios.js";
@@ -11,6 +12,12 @@ export interface Dependencias {
   ahora: () => Date;
 }
 
+/** DynamoDB si existe TABLA_RESERVAS (producción); si no, memoria (local). */
+function repoPorDefecto(): RepoReservas {
+  const tabla = process.env.TABLA_RESERVAS;
+  return tabla ? new RepoDynamo(tabla) : new RepoMemoria();
+}
+
 /**
  * Punto de entrada HTTP de la API. Todas las rutas cuelgan de /api
  * (así CloudFront puede enrutar /api/* al backend y el resto al frontend).
@@ -20,7 +27,7 @@ export interface Dependencias {
  */
 export function crearApp(dependencias: Partial<Dependencias> = {}) {
   const deps: Dependencias = {
-    repoReservas: dependencias.repoReservas ?? new RepoMemoria(),
+    repoReservas: dependencias.repoReservas ?? repoPorDefecto(),
     ahora: dependencias.ahora ?? (() => new Date()),
   };
   const app = new Hono().basePath("/api");
