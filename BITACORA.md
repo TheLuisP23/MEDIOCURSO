@@ -60,6 +60,16 @@ Formato de cada entrada:
   merge los PR #2 (plan de la 005: rol de GitHub con `AdministratorAccess`,
   costo de la EC2) y #3 (CODEOWNERS); deja comentarios en GitHub si algo no te cuadra.
 
+## 2026-10-20 — B (Codex) — rama `docs/001-cerrar-laboratorios`
+- **Spec/tareas:** 001 · T7
+- **Hecho:**
+  - Verificada la integración del catálogo de laboratorios entre backend y frontend.
+  - Actualizado el estado de la Spec 001 a `Implementada`.
+  - Marcada T7 como completada y actualizado el índice de `specs/README.md`.
+  - `npm run check` ejecutado correctamente: especificaciones, sincronización de skills, TypeScript y pruebas.
+- **Estado de check:** verde; backend 3/3 pruebas y frontend 5/5 pruebas.
+- **Pendiente / siguiente paso:** revisar los cambios, crear el commit, subir la rama y abrir un PR hacia `main`.
+- **Bloqueos / preguntas para la otra persona:** ninguno identificado.
 ## 2026-10-20 16:05 — A (Claude Code) — rama `feat/002-back`
 - **Spec/tareas:** 002 · T1–T6 (todo el backend)
 - **Hecho:** P1–P3 de la spec 002 respondidas por A (sin la Ronda 2 de la guía),
