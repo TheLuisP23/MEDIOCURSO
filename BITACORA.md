@@ -52,3 +52,23 @@ Formato de cada entrada:
 - **Bloqueos / preguntas para la otra persona:** B, revisa por favor después del
   merge los PR #2 (plan de la 005: rol de GitHub con `AdministratorAccess`,
   costo de la EC2) y #3 (CODEOWNERS); deja comentarios en GitHub si algo no te cuadra.
+
+## 2026-10-20 16:05 — A (Claude Code) — rama `feat/002-back`
+- **Spec/tareas:** 002 · T1–T6 (todo el backend)
+- **Hecho:** P1–P3 de la spec 002 respondidas por A (sin la Ronda 2 de la guía),
+  spec aprobada y planificada (PR #6). Backend completo: `ErrorNegocio` +
+  `onError`, `crearApp({ repoReservas, ahora })`, RN-01…RN-04 en `dominio/`,
+  repos memoria y DynamoDB, `GET /api/laboratorios/:id/disponibilidad` y
+  `POST /api/reservas`. Probado también con el servidor real (`npm run dev:back`).
+- **Estado de check:** verde (backend 24/24, frontend 2/2).
+- **Decisiones:** P3 de la spec: `disponible` es `true` solo si el bloque está
+  libre y es reservable ahora. Un error no previsto responde 500 con solo
+  `{ mensaje }` (sin `codigo`): el front lo trata como `DESCONOCIDO`.
+  Esta rama incluye `feat/001-back` (PR #5) y `spec/002-acuerdos` (PR #6), que
+  quedaron sin mergear; cuando entren a `main`, el PR de esta rama queda solo con la 002.
+- **Pendiente / siguiente paso:**
+  - B: T7–T10 de la spec 002 en `feat/002-front` (ver `specs/002-reservas/plan.md`,
+    sección Frontend). El backend ya responde en local con `npm run dev`.
+  - A: spec 005 T1 (`infra/bootstrap/`) en `feat/005-terraform`.
+- **Bloqueos / preguntas para la otra persona:** hasta la spec 003, reservar un
+  bloque ya ocupado lo **sobrescribe** (no hay 409 todavía). Sofia: revisa P3 en el PR #6.
