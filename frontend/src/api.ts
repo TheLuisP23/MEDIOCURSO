@@ -30,15 +30,28 @@ export async function pedir<T>(
     },
   });
 
-  if (!res.ok) {
-    const cuerpo = await res.json().catch(() => ({}));
 
-    throw new ErrorApi(
-      res.status,
-      cuerpo.codigo ?? "DESCONOCIDO",
-      cuerpo.mensaje ?? res.statusText,
-    );
+  if (!res.ok) {
+    const cuerpo: unknown = await res.json().catch(() => null);
+
+    const error =
+      typeof cuerpo === "object" && cuerpo !== null
+        ? (cuerpo as { codigo?: unknown; mensaje?: unknown; error?: unknown })
+        : null;
+
+    const codigo =
+      typeof error?.codigo === "string"
+        ? error.codigo
+        : "DESCONOCIDO";
+
+    const mensaje =
+      typeof error?.mensaje === "string" && error.mensaje.trim() !== ""
+        ? error.mensaje
+        : "No se pudo completar la solicitud. Inténtalo de nuevo.";
+
+    throw new ErrorApi(res.status, codigo, mensaje);
   }
+
 
   return res.status === 204
     ? (undefined as T)

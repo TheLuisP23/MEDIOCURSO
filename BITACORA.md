@@ -108,3 +108,18 @@ Formato de cada entrada:
     la grilla; test CA-13 en `frontend/test/ReservarBloque.test.tsx`).
 - **Bloqueos / preguntas para la otra persona:** ninguno. Esta rama parte de
   `feat/002-back` (PR #7): mergear el #7 primero.
+
+## 2026-10-20 18:50 — B (Codex) — rama `fix/001-error-api-comprensible`
+
+- **Spec/tareas:** 001 · Corrección de manejo de errores para CA-04.
+- **Hecho:**
+  - Actualizado `frontend/src/api.ts` para mostrar un mensaje comprensible cuando la respuesta de error no contiene un `mensaje` válido.
+  - Añadidas pruebas en `frontend/test/api.test.ts` para HTTP 500 sin cuerpo, error con mensaje válido y HTTP 502 con `{ error: "Bad Gateway" }`.
+  - Ejecutado `npm run check`: verificaciones de specs y skills, TypeScript y pruebas completadas correctamente.
+- **Estado de check:** verde; backend 34/34 pruebas y frontend 8/8 pruebas.
+- **Decisiones:** no se modifica `docs/api/openapi.yaml`. `DESCONOCIDO` se conserva como identificador interno para errores inesperados, no como código oficial del contrato.
+- **Pendiente / siguiente paso:**
+  - Revisar `frontend/src/api.ts` y `frontend/test/api.test.ts`.
+  - Ejecutar `npm run check`.
+  - Completar la revisión del cambio, crear el commit y abrir un PR hacia `main`.
+- **Bloqueos / preguntas para la otra persona:** ninguno identificado.
