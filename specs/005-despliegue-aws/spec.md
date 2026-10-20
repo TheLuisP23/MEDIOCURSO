@@ -1,6 +1,6 @@
 # Spec 005 — Despliegue en AWS
 
-- **Estado:** Borrador
+- **Estado:** En curso
 - **Dueños:** infraestructura: A (dueño de la cuenta AWS) · verificación: B
 - **Depende de:** 001 (mínimo); idealmente 002–004
 - **Verificación:** manual (evidencias en `docs/informe/experimentos.md`)

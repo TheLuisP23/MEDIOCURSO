@@ -1,6 +1,6 @@
 # ADR 0002 — Despliegue en EC2 con Terraform y GitHub Actions
 
-- **Estado:** Propuesta (se acepta al aprobar el PR de la spec 005)
+- **Estado:** Aceptada
 - **Fecha:** 2026-10-20
 - **Reemplaza:** el punto 3 del ADR 0001 (serverless con AWS SAM)
 

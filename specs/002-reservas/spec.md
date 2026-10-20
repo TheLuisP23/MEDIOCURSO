@@ -1,6 +1,6 @@
 # Spec 002 — Disponibilidad y crear reserva
 
-- **Estado:** Borrador
+- **Estado:** En curso
 - **Dueños:** backend: A · frontend: B
 - **Depende de:** 001
 
@@ -67,6 +67,14 @@ Bloques de **una hora** que empiezan en punto, de `07:00` a `21:00`
 ## Preguntas abiertas
 
 - **P1** — En la grilla, ¿un bloque ocupado muestra el código de quien lo
-  reservó? → *Respuesta:* (pendiente)
+  reservó? → *Respuesta:* No. Solo se muestra "Ocupado": el contrato
+  (`Bloque`) no expone al usuario y así no se publican datos de otros alumnos.
 - **P2** — ¿La UI permite elegir domingos (y mostrar todo deshabilitado) o el
-  selector de fecha los bloquea? → *Respuesta:* (pendiente)
+  selector de fecha los bloquea? → *Respuesta:* El selector no permite elegir
+  domingos. La API igual responde los 15 bloques con `disponible: false` si se
+  consulta un domingo, y RN-02 rechaza reservarlo.
+- **P3** — En la disponibilidad, ¿un bloque libre pero no reservable (ya
+  empezó, fuera de los 14 días o en domingo) sale como disponible? →
+  *Respuesta:* No: `disponible` es `true` solo si el bloque está libre **y**
+  se podría reservar ahora (cumple RN-02, RN-03 y RN-04). Así la grilla nunca
+  ofrece un clic que la API va a rechazar.

@@ -36,3 +36,26 @@ Formato de cada entrada:
 - **Decisiones:** CA-04 simula rechazo de la petición `fetch`; el componente muestra un mensaje genérico claro para fallos de conexión y conserva el mensaje de `ErrorApi` para errores HTTP.
 - **Pendiente / siguiente paso:** Cuando A integre T1–T3 y el endpoint `GET /api/laboratorios` esté disponible, ejecutar la integración frontend/backend y después completar T7 actualizando el estado de la spec y el índice de `specs/README.md`.
 - **Bloqueos / preguntas para la otra persona:** T1–T3 del backend aún no están integradas. `package-lock.json` ya estaba modificado al iniciar esta sesión y se conservó sin cambios adicionales.
+## 2026-10-20 15:56 — A (Claude Code) — rama `feat/001-back`
+- **Spec/tareas:** 001 · T1, T2, T3 — 005 · spec, ADR y plan (sin tareas de código aún)
+- **Hecho:**
+  - Spec 001 backend: `dominio/laboratorios.ts` (catálogo + `buscarLaboratorio`),
+    `rutas/laboratorios.ts` montada en `app.ts`, tests CA-01 y CA-02.
+  - Spec 005 reescrita para EC2 + Terraform + GitHub Actions (PR #1), ADR 0002
+    y nuevo Art. 8 de la constitución; `plan.md` y `tasks.md` (PR #2). Spec 005 `En curso`.
+  - CODEOWNERS con `@TheLuisP23` y `@Sofia-Itusaca` (PR #3).
+  - Protección de `main` en GitHub: PR + 1 aprobación + checks `check` e `infra`;
+    el administrador (A) puede saltarla.
+  - Revisión del PR #4 de B (frontend 001): aprobado con comentarios.
+- **Estado de check:** verde (backend 3/3, frontend 2/2 en esta rama).
+- **Decisiones:** PR #2 y #3 se mergearon **sin revisión de B** (bypass de
+  administrador, a pedido de A). `GUIA_EQUIPO.md` no se versiona (`.gitignore`).
+- **Pendiente / siguiente paso:**
+  - B: atender en el PR #4 el comentario 1 (mensaje en español cuando la API
+    responde 5xx sin JSON, más un test CA-04 con `500` sin cuerpo), mergear
+    el PR #4 y, con este backend ya en `main`, probar la integración y hacer T7 de la spec 001.
+  - A: spec 005 T1 (`infra/bootstrap/`) en `feat/005-terraform`.
+  - Ambos: Ronda 2 de la guía (P1 y P2 de la spec 002) para aprobar la 002.
+- **Bloqueos / preguntas para la otra persona:** B, revisa por favor después del
+  merge los PR #2 (plan de la 005: rol de GitHub con `AdministratorAccess`,
+  costo de la EC2) y #3 (CODEOWNERS); deja comentarios en GitHub si algo no te cuadra.
