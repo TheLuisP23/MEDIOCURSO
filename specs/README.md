@@ -37,6 +37,6 @@ sus tareas estén marcadas y que cada `RN-xx` tenga un test que lo mencione.
 | 002  | Disponibilidad y crear reserva| Borrador  |
 | 003  | Conflictos y concurrencia     | Borrador  |
 | 004  | Mis reservas y cancelación    | Borrador  |
-| 005  | Despliegue en AWS             | Borrador  |
+| 005  | Despliegue en AWS (EC2 + Terraform) | Borrador  |
 
 Plantillas en `_plantillas/`.
