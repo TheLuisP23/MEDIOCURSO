@@ -32,9 +32,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: hashicorp/setup-terraform@v3
         with:
-          python-version: "3.12"
-      - run: pip install cfn-lint
-      - name: Validar plantilla SAM (CA-18)
-        run: cfn-lint infra/template.yaml
+          terraform_version: "1.16.1"
+      - name: Formato de Terraform (CA-18)
+        run: terraform fmt -check -recursive infra
+      - name: Validar infra/ y infra/bootstrap/ (CA-18)
+        run: |
+          for dir in infra infra/bootstrap; do
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+          done
+
+  # Muestra en el PR qué cambiaría en AWS. Solo en PRs del propio repo (OIDC) y
+  # cuando el despliegue está configurado; no es un check obligatorio.
+  plan:
+    name: plan
+    if: github.event_name == 'pull_request' && vars.DESPLIEGUE_ACTIVO == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.1"
+          terraform_wrapper: false
+      - name: terraform plan (CA-18)
+        working-directory: infra
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+          terraform plan -input=false -lock=false -no-color -var="region=${{ vars.AWS_REGION }}" | tee plan.txt
+          {
+            echo "### Plan de Terraform"
+            echo '```'
+            grep -E "^Plan:|^No changes|will be (created|destroyed|updated|replaced)|must be replaced" plan.txt || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

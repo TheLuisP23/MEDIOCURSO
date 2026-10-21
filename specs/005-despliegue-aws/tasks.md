@@ -9,7 +9,7 @@ Formato obligatorio de línea: `- [ ] T<n> [B|F|D] descripción (dueño: A|B)`.
 - [x] T3 [D] Crear `infra/` con versiones, variables, DynamoDB, bucket de artefactos, red e IAM; borrar `infra/template.yaml` (dueño: A)
 - [x] T4 [D] Agregar `ec2.tf`, `arranque.sh.tftpl` (Node 22, nginx, systemd) y `outputs.tf` (dueño: A)
 - [x] T5 [B] Build del backend para Node: `dist/server.mjs` con AWS SDK incluido; borrar `lambda.ts` y actualizar comentarios (dueño: A)
-- [ ] T6 [D] CI: job `infra` con `fmt`/`validate` de Terraform y `plan` en PRs (CA-18) (dueño: A)
+- [x] T6 [D] CI: job `infra` con `fmt`/`validate` de Terraform y `plan` en PRs (CA-18) (dueño: A)
 - [ ] T7 [D] Reescribir `deploy.yml`: check, OIDC, `terraform apply`, artefacto a S3, SSM y verificación de `/api/health` (CA-19, CA-20, CA-23) (dueño: A)
 - [ ] T8 [F] Actualizar comentarios de CloudFront en `vite.config.ts` y `frontend/AGENTS.md` (dueño: B)
 - [ ] T9 [D] Reescribir `docs/despliegue.md` y actualizar `docs/arquitectura.md`, `AGENTS.md`, `backend/AGENTS.md` y `README.md` (dueño: A)
