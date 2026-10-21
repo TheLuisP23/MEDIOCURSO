@@ -20,7 +20,7 @@ test/              *.test.tsx — simula fetch con vi.stubGlobal
 
 ## Convenciones
 
-- **No hay router**: una sola página con secciones (CloudFront no conoce rutas).
+- **No hay router**: una sola página con secciones (ver `docs/arquitectura.md`).
 - Todo componente que llama a la API muestra los estados: cargando, error
   (con el `mensaje` del `ErrorApi`) y datos/vacío.
 - El código de alumno se guarda en `localStorage` con la clave `codigoAlumno`
