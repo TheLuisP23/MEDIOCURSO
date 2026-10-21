@@ -1,4 +1,4 @@
-
+import { leerCodigoAlumno } from "./codigoAlumno";
 import type {
   Laboratorio,
   Disponibilidad,
@@ -27,7 +27,7 @@ export async function pedir<T>(
   ruta: string,
   opciones: RequestInit = {},
 ): Promise<T> {
-  const codigoAlumno = localStorage.getItem("codigoAlumno");
+  const codigoAlumno = leerCodigoAlumno();
 
   const res = await fetch(`/api${ruta}`, {
     ...opciones,
