@@ -1,0 +1,109 @@
+#!/bin/bash
+# Arranque de la EC2 (cloud-init, una vez por instancia). Plantilla de Terraform:
+# tabla, region y version_node los rellena ec2.tf; en bash se evitan las llaves.
+set -euxo pipefail
+
+# --- Node.js (binario oficial; la instancia es ARM) -----------------------------
+VERSION_NODE="${version_node}"
+curl -fsSL "https://nodejs.org/dist/v$VERSION_NODE/node-v$VERSION_NODE-linux-arm64.tar.xz" -o /tmp/node.tar.xz
+mkdir -p /opt/node
+tar -xJf /tmp/node.tar.xz -C /opt/node --strip-components=1
+rm /tmp/node.tar.xz
+
+# --- Usuario y carpetas de la app ------------------------------------------------
+useradd --system --home-dir /opt/reserva-labs --shell /sbin/nologin reserva || true
+mkdir -p /opt/reserva-labs/versiones
+chmod 755 /opt/reserva-labs /opt/reserva-labs/versiones
+
+# --- nginx: frontend estático + /api/* hacia el backend --------------------------
+dnf install -y nginx
+cat > /etc/nginx/nginx.conf <<'NGINX'
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include /etc/nginx/mime.types;
+  default_type application/octet-stream;
+  access_log /var/log/nginx/access.log;
+  sendfile on;
+  gzip on;
+  gzip_types text/css application/javascript application/json;
+
+  server {
+    listen 80 default_server;
+    server_name _;
+    root /opt/reserva-labs/actual/frontend;
+    index index.html;
+
+    location /api/ {
+      proxy_pass http://127.0.0.1:3000;
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Página única: cualquier ruta desconocida devuelve index.html.
+    location / {
+      try_files $uri $uri/ /index.html;
+    }
+  }
+}
+NGINX
+systemctl enable --now nginx
+
+# --- Backend como servicio -------------------------------------------------------
+cat > /etc/systemd/system/reserva-labs.service <<'UNIDAD'
+[Unit]
+Description=API de reserva de laboratorios
+After=network-online.target
+Wants=network-online.target
+# No arranca hasta que el primer despliegue haya instalado una versión.
+ConditionPathExists=/opt/reserva-labs/actual/backend/server.mjs
+
+[Service]
+User=reserva
+WorkingDirectory=/opt/reserva-labs
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=TABLA_RESERVAS=${tabla}
+Environment=AWS_REGION=${region}
+ExecStart=/opt/node/bin/node /opt/reserva-labs/actual/backend/server.mjs
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+UNIDAD
+systemctl daemon-reload
+systemctl enable reserva-labs
+
+# --- Script de despliegue (lo invoca GitHub Actions por SSM) ---------------------
+cat > /usr/local/bin/desplegar-reserva-labs <<'DESPLIEGUE'
+#!/bin/bash
+# Uso: desplegar-reserva-labs <version> <s3://bucket/ruta.tar.gz>
+set -euo pipefail
+VERSION="$1"
+ORIGEN="$2"
+DESTINO="/opt/reserva-labs/versiones/$VERSION"
+
+rm -rf "$DESTINO"
+mkdir -p "$DESTINO"
+aws s3 cp "$ORIGEN" /tmp/version.tar.gz --only-show-errors
+tar -xzf /tmp/version.tar.gz -C "$DESTINO"
+rm /tmp/version.tar.gz
+chmod -R a+rX "$DESTINO"
+
+ln -sfn "$DESTINO" /opt/reserva-labs/actual
+systemctl restart reserva-labs
+systemctl reload nginx
+
+# Conserva solo las 3 versiones más recientes.
+ls -1dt /opt/reserva-labs/versiones/* | tail -n +4 | xargs -r rm -rf
+echo "Versión $VERSION desplegada"
+DESPLIEGUE
+chmod 755 /usr/local/bin/desplegar-reserva-labs

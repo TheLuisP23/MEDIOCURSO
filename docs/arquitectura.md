@@ -2,21 +2,29 @@
 
 ## Vista general
 
+Infraestructura descrita con Terraform en `infra/` (ADR 0002):
+
 ```
-                    ┌────────────── AWS ───────────────────────────────────┐
-Navegador ──HTTPS──▶│ CloudFront ─┬─ /*     ─▶ S3 (build de frontend/)      │
-                    │             └─ /api/* ─▶ API Gateway HTTP ─▶ Lambda   │
-                    │                                      (backend/, Hono) │
-                    │                                           │           │
-                    │                                      DynamoDB         │
-                    └───────────────────────────────────────────────────────┘
+                   ┌─────────────────── AWS ───────────────────────────────┐
+Navegador ──HTTP──▶│ IP elástica ─▶ EC2 (Amazon Linux 2023, t4g.micro)     │
+                   │                 nginx ─┬─ /*     ─▶ build de frontend/ │
+                   │                        └─ /api/* ─▶ Node (backend/,    │
+                   │                                     Hono, systemd)     │
+                   │                                          │             │
+                   │                                       DynamoDB         │
+                   │                                                        │
+                   │ S3: estado de Terraform · artefactos de cada versión   │
+                   └────────────────────────────────────────────────────────┘
+GitHub Actions ──OIDC──▶ terraform apply · sube la versión a S3 · SSM a la EC2
 ```
 
-- **Un solo dominio** (el de CloudFront): el front llama a `/api/...` relativo,
+- **Un solo origen** (el de la EC2): el front llama a `/api/...` relativo,
   así no hay CORS ni URLs que configurar. En local, Vite hace el mismo papel
   con su proxy (`frontend/vite.config.ts`).
-- **Sin router en el front**: es una sola página. No usar rutas tipo
-  `/mis-reservas` (CloudFront no las conoce); usar secciones o pestañas.
+- **Sin router en el front**: es una sola página. nginx devuelve `index.html`
+  para rutas desconocidas, pero se siguen usando secciones o pestañas, no
+  rutas tipo `/mis-reservas`.
+- **Sin SSH**: la EC2 solo abre el puerto 80; se administra con SSM.
 
 ## Repositorio (monorepo)
 
@@ -24,9 +32,9 @@ Navegador ──HTTPS──▶│ CloudFront ─┬─ /*     ─▶ S3 (build d
 |---------------|--------------|-------------------|
 | `specs/`      | Constitución y specs SDD | Ambos |
 | `docs/api/`   | Contrato OpenAPI | Ambos (PR revisado por el otro) |
-| `backend/`    | API Hono (Node 22) que corre local o en Lambda | A |
+| `backend/`    | API Hono (Node 22) que corre local o en la EC2 | A |
 | `frontend/`   | React + Vite | B |
-| `infra/`      | Plantilla AWS SAM | A |
+| `infra/`      | Terraform (EC2, DynamoDB, S3, IAM) y `bootstrap/` | A |
 | `.agents/skills/`, `AGENTS.md` | Harness compartido | Ambos |
 
 ## Backend por capas
@@ -42,7 +50,7 @@ repos/  (interfaz) ──┬── memoria.ts  (local y tests)
 
 ## Modelo de datos en DynamoDB
 
-Tabla `Reservas` (definida en `infra/template.yaml`):
+Tabla `Reservas` (definida en `infra/dynamodb.tf`; en AWS se llama `reserva-labs-reservas`):
 
 | Atributo       | Tipo | Ejemplo | Nota |
 |----------------|------|---------|------|

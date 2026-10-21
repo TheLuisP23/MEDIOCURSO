@@ -1,6 +1,6 @@
-# Despliegue a AWS (spec 005). Se ejecuta en cada merge a main, pero SOLO si
-# la variable de repositorio DESPLIEGUE_ACTIVO vale "true" (así no falla antes
-# de configurar AWS). Configuración: docs/despliegue.md
+# Despliegue a AWS (spec 005, ADR 0002). Se ejecuta en cada merge a main, pero
+# SOLO si la variable de repositorio DESPLIEGUE_ACTIVO vale "true" (así no falla
+# antes del bootstrap). Configuración: docs/despliegue.md
 name: Despliegue
 
 on:
@@ -16,56 +16,99 @@ jobs:
   desplegar:
     if: vars.DESPLIEGUE_ACTIVO == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # OIDC: sin claves de AWS guardadas en GitHub
+      contents: read
     env:
-      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-      STACK: ${{ vars.STACK_NAME || 'reserva-labs' }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run check
+
+      # CA-23: si el check falla, el job termina aquí y no se toca nada en AWS.
+      - name: Specs, skills, tipos y tests
+        run: npm run check
       - name: Build (backend → backend/dist, frontend → frontend/dist)
         run: npm run build
 
       - uses: aws-actions/configure-aws-credentials@v6
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-      - uses: aws-actions/setup-sam@v3
+      - uses: hashicorp/setup-terraform@v3
         with:
-          use-installer: true
+          terraform_version: "1.16.1"
+          terraform_wrapper: false
 
-      - name: Desplegar infraestructura y backend (SAM)
+      - name: Aplicar infraestructura (Terraform)
+        working-directory: infra
         run: |
-          PARAMS=""
-          if [ -n "${{ vars.LAB_ROLE_ARN }}" ]; then
-            PARAMS="--parameter-overrides LabRoleArn=${{ vars.LAB_ROLE_ARN }}"
-          fi
-          sam deploy \
-            --template-file infra/template.yaml \
-            --stack-name "$STACK" \
-            --resolve-s3 \
-            --capabilities CAPABILITY_IAM \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset \
-            $PARAMS
+          terraform init -input=false \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="region=$AWS_REGION"
+          terraform apply -input=false -auto-approve -var="region=$AWS_REGION"
+          {
+            echo "INSTANCIA=$(terraform output -raw id_instancia)"
+            echo "BUCKET=$(terraform output -raw bucket_artefactos)"
+            echo "URL=$(terraform output -raw url_app)"
+          } >> "$GITHUB_ENV"
 
-      - name: Subir frontend a S3 e invalidar CloudFront
+      - name: Empaquetar y subir la versión
         run: |
-          salida() {
-            aws cloudformation describe-stacks --stack-name "$STACK" \
-              --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text
-          }
-          BUCKET=$(salida BucketFrontend)
-          DIST=$(salida DistribucionId)
-          URL=$(salida UrlApp)
-          aws s3 sync frontend/dist "s3://$BUCKET" --delete
-          aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*" > /dev/null
+          mkdir -p paquete/backend paquete/frontend
+          cp backend/dist/server.mjs paquete/backend/
+          cp -r frontend/dist/. paquete/frontend/
+          tar -czf version.tar.gz -C paquete .
+          aws s3 cp version.tar.gz "s3://$BUCKET/versiones/$GITHUB_SHA.tar.gz" --only-show-errors
+
+      - name: Esperar a que la instancia esté lista para SSM
+        run: |
+          for i in $(seq 1 40); do
+            estado=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=$INSTANCIA" \
+              --query "InstanceInformationList[0].PingStatus" --output text)
+            [ "$estado" = "Online" ] && exit 0
+            echo "SSM: ${estado:-sin registrar}; reintento en 15 s"
+            sleep 15
+          done
+          echo "La instancia no se registró en SSM a tiempo" >&2
+          exit 1
+
+      - name: Publicar la versión en la EC2 (SSM, CA-19)
+        run: |
+          comando="cloud-init status --wait > /dev/null; /usr/local/bin/desplegar-reserva-labs $GITHUB_SHA s3://$BUCKET/versiones/$GITHUB_SHA.tar.gz"
+          id=$(aws ssm send-command \
+            --instance-ids "$INSTANCIA" \
+            --document-name AWS-RunShellScript \
+            --comment "Despliegue $GITHUB_SHA" \
+            --parameters "$(jq -cn --arg c "$comando" '{commands: [$c], executionTimeout: ["900"]}')" \
+            --query Command.CommandId --output text)
+          # El primer arranque (cloud-init) puede tardar varios minutos.
+          for i in $(seq 1 60); do
+            estado=$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCIA" \
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "$estado" in
+              Success) break ;;
+              Pending|InProgress|Delayed) sleep 10 ;;
+              *)
+                aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCIA" \
+                  --query "[StandardOutputContent, StandardErrorContent]" --output text
+                echo "El despliegue en la EC2 terminó en estado $estado" >&2
+                exit 1 ;;
+            esac
+          done
+          [ "$estado" = "Success" ] || { echo "Tiempo agotado esperando a SSM" >&2; exit 1; }
+          aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCIA" \
+            --query StandardOutputContent --output text
+
+      - name: Verificar /api/health (CA-20)
+        run: |
+          curl -fsS --retry 12 --retry-all-errors --retry-delay 5 "$URL/api/health" | tee salud.json
+          grep -q '"estado":"ok"' salud.json
           echo "### 🚀 App desplegada: $URL" >> "$GITHUB_STEP_SUMMARY"
           echo "Prueba: $URL/api/health" >> "$GITHUB_STEP_SUMMARY"

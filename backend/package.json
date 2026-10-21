@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "esbuild src/lambda.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/lambda.mjs --external:@aws-sdk/*"
+    "build": "esbuild src/server.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/server.mjs --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\""
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1154.0",
