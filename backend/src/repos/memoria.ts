@@ -12,6 +12,22 @@ export class RepoMemoria implements RepoReservas {
     return true;
   }
 
+  async obtener(id: string): Promise<Reserva | undefined> {
+    const reserva = this.reservas.get(id);
+    return reserva && { ...reserva };
+  }
+
+  async eliminar(id: string): Promise<void> {
+    this.reservas.delete(id);
+  }
+
+  async delUsuarioDesde(usuario: string, desde: string): Promise<Reserva[]> {
+    const fechaHora = (r: Reserva) => `${r.fecha}T${r.hora}`;
+    return [...this.reservas.values()]
+      .filter((r) => r.usuario === usuario && fechaHora(r) >= desde)
+      .sort((a, b) => fechaHora(a).localeCompare(fechaHora(b)));
+  }
+
   async delDia(laboratorioId: string, fecha: string): Promise<Reserva[]> {
     return [...this.reservas.values()].filter(
       (reserva) => reserva.laboratorioId === laboratorioId && reserva.fecha === fecha,

@@ -1,10 +1,14 @@
 import { Hono } from "hono";
 import type { Dependencias } from "../app.js";
-import { esFechaValida } from "../dominio/bloques.js";
+import { esFechaValida, hoyEnLima } from "../dominio/bloques.js";
 import { ErrorNegocio } from "../dominio/errores.js";
 import {
   asegurarBloqueLibre,
+  asegurarExiste,
   idReserva,
+  sigueVigente,
+  validarCancelacionATiempo,
+  validarDueno,
   validarAnticipacion,
   validarBloque,
   validarLaboratorio,
@@ -32,7 +36,7 @@ function esNuevaReserva(cuerpo: unknown): cuerpo is NuevaReserva {
   );
 }
 
-/** Rutas de la spec 002. Se montan en /api/reservas. */
+/** Rutas de las specs 002–004. Se montan en /api/reservas. */
 export function rutasReservas({ repoReservas, ahora }: Dependencias) {
   const rutas = new Hono();
 
@@ -70,6 +74,26 @@ export function rutasReservas({ repoReservas, ahora }: Dependencias) {
     };
     asegurarBloqueLibre(await repoReservas.guardar(reserva));
     return c.json(reserva, 201);
+  });
+
+  // Spec 004 (CA-14): reservas del usuario cuyo bloque aún no termina, por fecha y hora.
+  rutas.get("/mias", async (c) => {
+    const usuario = validarUsuario(c.req.header("X-Usuario"));
+    const instante = ahora();
+    const desdeHoy = `${hoyEnLima(instante)}T00:00`;
+    const reservas = await repoReservas.delUsuarioDesde(usuario, desdeHoy);
+    return c.json(reservas.filter((r) => sigueVigente(r, instante)));
+  });
+
+  // Spec 004 (CA-15). Orden fijo (P3): usuario (401) → RN-10 (404) → RN-08 (403) → RN-09 (422).
+  rutas.delete("/:id", async (c) => {
+    const usuario = validarUsuario(c.req.header("X-Usuario"));
+    const reserva = await repoReservas.obtener(c.req.param("id"));
+    asegurarExiste(reserva);
+    validarDueno(reserva, usuario);
+    validarCancelacionATiempo(reserva, ahora());
+    await repoReservas.eliminar(reserva.id);
+    return c.body(null, 204);
   });
 
   return rutas;

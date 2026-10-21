@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { ErrorNegocio } from "../src/dominio/errores.js";
 import {
   asegurarBloqueLibre,
+  asegurarExiste,
+  sigueVigente,
+  validarCancelacionATiempo,
+  validarDueno,
   esReservable,
   idReserva,
   validarAnticipacion,
@@ -93,6 +97,35 @@ describe("reglas de reserva (dominio)", () => {
     const delDia = [reservaDe("LAB-101", "10:00")];
     expect(codigoDeError(() => validarSinChoque(delDia, "10:00", "LAB-102"))).toBe("CHOQUE_USUARIO");
     expect(codigoDeError(() => validarSinChoque(delDia, "11:00", "LAB-102"))).toBeUndefined();
+  });
+
+  it("RN-08: solo el dueño puede cancelar su reserva", () => {
+    const reserva = reservaDe("LAB-101", "10:00");
+    expect(codigoDeError(() => validarDueno(reserva, "OTRO12345"))).toBe("PROHIBIDO");
+    expect(codigoDeError(() => validarDueno(reserva, "20231234"))).toBeUndefined();
+  });
+
+  it("RN-09: se puede cancelar hasta 1 hora antes del inicio (60 minutos exactos sí)", () => {
+    const reserva = reservaDe("LAB-101", "10:00"); // 6 de noviembre, 10:00
+    const a = (iso: string) => new Date(iso);
+    expect(codigoDeError(() => validarCancelacionATiempo(reserva, a("2026-11-06T09:00:00-05:00")))).toBeUndefined();
+    expect(codigoDeError(() => validarCancelacionATiempo(reserva, a("2026-11-06T09:00:01-05:00")))).toBe(
+      "CANCELACION_TARDIA",
+    );
+    expect(codigoDeError(() => validarCancelacionATiempo(reserva, a("2026-11-06T10:30:00-05:00")))).toBe(
+      "CANCELACION_TARDIA",
+    );
+  });
+
+  it("RN-10: cancelar una reserva que no existe responde RESERVA_NO_EXISTE", () => {
+    expect(codigoDeError(() => asegurarExiste(undefined))).toBe("RESERVA_NO_EXISTE");
+    expect(codigoDeError(() => asegurarExiste(reservaDe("LAB-101", "10:00")))).toBeUndefined();
+  });
+
+  it("sigueVigente: el bloque cuenta hasta que termina (spec 004, P1)", () => {
+    const reserva = reservaDe("LAB-101", "10:00");
+    expect(sigueVigente(reserva, new Date("2026-11-06T10:59:00-05:00"))).toBe(true);
+    expect(sigueVigente(reserva, new Date("2026-11-06T11:00:00-05:00"))).toBe(false);
   });
 
   it("idReserva sigue el formato del contrato", () => {
