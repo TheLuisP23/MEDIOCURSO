@@ -146,3 +146,21 @@ Formato de cada entrada:
   - B: T8 — en `frontend/vite.config.ts` y `frontend/AGENTS.md`, cambiar las
     menciones a CloudFront/API Gateway por nginx en la EC2.
 - **Bloqueos / preguntas para la otra persona:** ninguno.
+
+## 2026-10-20 20:45 — A (Claude Code) — rama `feat/002-003-front`
+- **Spec/tareas:** 002 · T8–T11 · 003 · T5–T6 · 005 · T8 (todas de B, hechas por A a pedido de A)
+- **Hecho:** Frontend de reservas: `CodigoAlumno` (CA-08), `ReservarBloque` +
+  `GrillaBloques` (CA-09, CA-10; sin domingos, P2), aviso de 409
+  `BLOQUE_OCUPADO` con recarga (CA-13). Lectura segura de `localStorage`
+  (`src/codigoAlumno.ts`), pendiente de la revisión del PR #13 (que se mergeó
+  sin bitácora). Comentarios de CloudFront en `frontend/` actualizados.
+  Specs 002 y 003 marcadas **Implementadas**.
+- **Estado de check:** verde (backend 34/34, frontend 20/20).
+- **Decisiones:** A pidió completar todas las tareas pendientes, incluidas las
+  de B, antes del primer despliegue; se editó `frontend/` con esa autorización.
+  La grilla muestra "No disponible" tanto si está ocupado como si ya no es
+  reservable (P1 y P3 de la 002). Fecha por defecto: hoy en Lima, o el lunes si es domingo.
+- **Pendiente / siguiente paso:** spec 004 completa en `feat/004-mis-reservas`
+  (siguiente PR). Luego despliegue (spec 005, T10).
+- **Bloqueos / preguntas para la otra persona:** B, revisa por favor
+  `ReservarBloque.tsx` y `MisReservas.tsx`: ahora son tuyos para mantener.
