@@ -1,5 +1,10 @@
 
-import type { Laboratorio } from "./tipos";
+import type {
+  Laboratorio,
+  Disponibilidad,
+  NuevaReserva,
+  Reserva,
+} from "./tipos";
 
 /**
  * Cliente HTTP del frontend.
@@ -22,21 +27,27 @@ export async function pedir<T>(
   ruta: string,
   opciones: RequestInit = {},
 ): Promise<T> {
+  const codigoAlumno = localStorage.getItem("codigoAlumno");
+
   const res = await fetch(`/api${ruta}`, {
     ...opciones,
     headers: {
       "Content-Type": "application/json",
+      ...(codigoAlumno ? { "X-Usuario": codigoAlumno } : {}),
       ...opciones.headers,
     },
   });
-
 
   if (!res.ok) {
     const cuerpo: unknown = await res.json().catch(() => null);
 
     const error =
       typeof cuerpo === "object" && cuerpo !== null
-        ? (cuerpo as { codigo?: unknown; mensaje?: unknown; error?: unknown })
+        ? (cuerpo as {
+            codigo?: unknown;
+            mensaje?: unknown;
+            error?: unknown;
+          })
         : null;
 
     const codigo =
@@ -52,7 +63,6 @@ export async function pedir<T>(
     throw new ErrorApi(res.status, codigo, mensaje);
   }
 
-
   return res.status === 204
     ? (undefined as T)
     : ((await res.json()) as T);
@@ -62,4 +72,15 @@ export const api = {
   salud: () => pedir<{ estado: string }>("/health"),
 
   laboratorios: () => pedir<Laboratorio[]>("/laboratorios"),
+
+  disponibilidad: (id: string, fecha: string) =>
+    pedir<Disponibilidad>(
+      `/laboratorios/${encodeURIComponent(id)}/disponibilidad?fecha=${encodeURIComponent(fecha)}`,
+    ),
+
+  crearReserva: (nueva: NuevaReserva) =>
+    pedir<Reserva>("/reservas", {
+      method: "POST",
+      body: JSON.stringify(nueva),
+    }),
 };
