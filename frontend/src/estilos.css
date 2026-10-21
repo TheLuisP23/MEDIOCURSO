@@ -52,3 +52,61 @@ body {
 .tarjeta-laboratorio h3 {
   margin-top: 0;
 }
+
+.codigo-alumno form,
+.codigo-alumno p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.reservar {
+  margin-top: 32px;
+}
+
+.selectores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.grilla-bloques {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.bloque {
+  width: 100%;
+  padding: 10px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: white;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bloque-libre:not(:disabled) {
+  border-color: var(--acento);
+  color: var(--acento);
+  cursor: pointer;
+}
+
+.bloque-tomado {
+  color: var(--suave);
+  background: var(--fondo);
+}
+
+.bloque-detalle {
+  font-size: 0.75rem;
+}
+
+[role="alert"] {
+  color: var(--error);
+}

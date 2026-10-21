@@ -10,5 +10,5 @@ Requisito: backend de la spec 002 en `main` (PR #7). El frontend requiere T10 de
 - [x] T2 [B] Repo memoria: `guardar` atómico que devuelve `boolean` y `delUsuarioEnDia` (dueño: A)
 - [x] T3 [B] `POST /reservas` con RN-05, RN-06, RN-07 y tests CA-11 y CA-12 (dueño: A)
 - [x] T4 [B] Repo DynamoDB: `PutItem` condicional y `Query` en `porUsuario`, con test de cliente simulado (dueño: A)
-- [ ] T5 [F] Test CA-13 e implementación del mensaje de 409 con recarga de la grilla (dueño: B)
+- [x] T5 [F] Test CA-13 e implementación del mensaje de 409 con recarga de la grilla (dueño: B)
 - [ ] T6 [D] Marcar spec como Implementada y actualizar índice en `specs/README.md` (dueño: B)
