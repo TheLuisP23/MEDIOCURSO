@@ -12,7 +12,7 @@ Requisito: el PR #5 (backend de la spec 001) debe estar en `main`.
 - [x] T4 [B] `GET /laboratorios/:id/disponibilidad` con tests CA-06 y RN-01 (dueño: A)
 - [x] T5 [B] `validarUsuario` y `POST /reservas` con tests CA-07, CA-08 y RN-01 (dueño: A)
 - [x] T6 [B] `repos/dynamo.ts` (BatchGetItem y PutItem) elegido si existe `TABLA_RESERVAS` (dueño: A)
-- [ ] T7 [F] Tipos `Bloque`, `Disponibilidad`, `NuevaReserva`, `Reserva`; `api.disponibilidad`, `api.crearReserva` y cabecera `X-Usuario` (dueño: B)
+- [x] T7 [F] Tipos `Bloque`, `Disponibilidad`, `NuevaReserva`, `Reserva`; `api.disponibilidad`, `api.crearReserva` y cabecera `X-Usuario` (dueño: B)
 - [ ] T8 [F] `CodigoAlumno` con test de formato y guardado en `localStorage` (dueño: B)
 - [ ] T9 [F] Tests CA-09 y CA-10 de `ReservarBloque` (dueño: B)
 - [ ] T10 [F] Implementar `ReservarBloque` y `GrillaBloques` y usarlos en `App.tsx` (dueño: B)
