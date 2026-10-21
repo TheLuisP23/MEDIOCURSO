@@ -67,6 +67,35 @@ describe("RepoDynamo (cliente simulado)", () => {
     await expect(new RepoDynamo("Reservas", cliente).guardar(reserva)).rejects.toThrow("sin conexión");
   });
 
+  it("obtener usa GetItem por pk y devuelve undefined si no existe", async () => {
+    const { cliente, comandos } = clienteSimulado((c) =>
+      c.input.Key && (c.input.Key as { pk: string }).pk === reserva.id ? { Item: aItem(reserva) } : {},
+    );
+    const repo = new RepoDynamo("Reservas", cliente);
+
+    expect(await repo.obtener(reserva.id)).toEqual(reserva);
+    expect(await repo.obtener("LAB-999.2026-11-06.10")).toBeUndefined();
+    expect(comandos[0]).toMatchObject({ nombre: "GetCommand", input: { Key: { pk: reserva.id } } });
+  });
+
+  it("CA-15: eliminar usa DeleteItem por pk", async () => {
+    const { cliente, comandos } = clienteSimulado(() => ({}));
+    await new RepoDynamo("Reservas", cliente).eliminar(reserva.id);
+    expect(comandos[0]).toMatchObject({ nombre: "DeleteCommand", input: { Key: { pk: reserva.id } } });
+  });
+
+  it("CA-14: delUsuarioDesde consulta porUsuario con fechaHora >= desde", async () => {
+    const { cliente, comandos } = clienteSimulado(() => ({ Items: [aItem(reserva)] }));
+    const repo = new RepoDynamo("Reservas", cliente);
+
+    expect(await repo.delUsuarioDesde("20231234", "2026-11-05T00:00")).toEqual([reserva]);
+    expect(comandos[0]?.input).toMatchObject({
+      IndexName: "porUsuario",
+      KeyConditionExpression: "usuario = :usuario AND fechaHora >= :desde",
+      ExpressionAttributeValues: { ":usuario": "20231234", ":desde": "2026-11-05T00:00" },
+    });
+  });
+
   it("delUsuarioEnDia consulta el índice porUsuario con begins_with de la fecha", async () => {
     const { cliente, comandos } = clienteSimulado(() => ({ Items: [aItem(reserva)] }));
     const repo = new RepoDynamo("Reservas", cliente);

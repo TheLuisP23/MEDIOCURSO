@@ -91,6 +91,39 @@ export function validarSinChoque(
   }
 }
 
+const HORA_MS = 60 * 60 * 1000;
+
+/** RN-10: la reserva a cancelar debe existir. */
+export function asegurarExiste(reserva: Reserva | undefined): asserts reserva is Reserva {
+  if (!reserva) {
+    throw new ErrorNegocio("RESERVA_NO_EXISTE", "Esa reserva no existe.", 404);
+  }
+}
+
+/** RN-08: solo el dueño puede cancelar su reserva. */
+export function validarDueno(reserva: Reserva, usuario: string): void {
+  if (reserva.usuario !== usuario) {
+    throw new ErrorNegocio("PROHIBIDO", "Solo puedes cancelar tus propias reservas.", 403);
+  }
+}
+
+/** RN-09: se cancela hasta 1 hora antes del inicio (60 minutos exactos sí, spec 004 P2). */
+export function validarCancelacionATiempo(reserva: Reserva, ahora: Date): void {
+  const faltan = instanteBloque(reserva.fecha, reserva.hora).getTime() - ahora.getTime();
+  if (faltan < HORA_MS) {
+    throw new ErrorNegocio(
+      "CANCELACION_TARDIA",
+      "Solo se puede cancelar hasta 1 hora antes del inicio del bloque.",
+      422,
+    );
+  }
+}
+
+/** Spec 004 (CA-14, P1): el bloque sigue vigente hasta que termina (dura una hora). */
+export function sigueVigente(reserva: Reserva, ahora: Date): boolean {
+  return instanteBloque(reserva.fecha, reserva.hora).getTime() + HORA_MS > ahora.getTime();
+}
+
 /** Spec 002, P3: un bloque libre solo se ofrece si se podría reservar ahora. */
 export function esReservable(fecha: string, hora: string, ahora: Date): boolean {
   try {

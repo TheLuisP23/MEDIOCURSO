@@ -2,7 +2,9 @@ import { ConditionalCheckFailedException, DynamoDBClient } from "@aws-sdk/client
 import {
   BatchGetCommand,
   type BatchGetCommandOutput,
+  DeleteCommand,
   DynamoDBDocumentClient,
+  GetCommand,
   PutCommand,
   QueryCommand,
   type QueryCommandOutput,
@@ -60,23 +62,44 @@ export class RepoDynamo implements RepoReservas {
     }
   }
 
+  async obtener(id: string): Promise<Reserva | undefined> {
+    const res = await this.cliente.send(new GetCommand({ TableName: this.tabla, Key: { pk: id } }));
+    return res.Item ? deItem(res.Item as ItemReserva) : undefined;
+  }
+
+  async eliminar(id: string): Promise<void> {
+    await this.cliente.send(new DeleteCommand({ TableName: this.tabla, Key: { pk: id } }));
+  }
+
   /** Query en el índice porUsuario con begins_with(fechaHora, fecha). */
-  async delUsuarioEnDia(usuario: string, fecha: string): Promise<Reserva[]> {
+  delUsuarioEnDia(usuario: string, fecha: string): Promise<Reserva[]> {
+    return this.consultarPorUsuario("begins_with(fechaHora, :fecha)", { ":usuario": usuario, ":fecha": fecha });
+  }
+
+  /** Query en el índice porUsuario con fechaHora >= desde (ordenado por el índice). */
+  delUsuarioDesde(usuario: string, desde: string): Promise<Reserva[]> {
+    return this.consultarPorUsuario("fechaHora >= :desde", { ":usuario": usuario, ":desde": desde });
+  }
+
+  private async consultarPorUsuario(
+    condicionFechaHora: string,
+    valores: Record<string, string>,
+  ): Promise<Reserva[]> {
     const items: ItemReserva[] = [];
-    let desde: Record<string, unknown> | undefined;
+    let siguiente: Record<string, unknown> | undefined;
     do {
       const res: QueryCommandOutput = await this.cliente.send(
         new QueryCommand({
           TableName: this.tabla,
           IndexName: "porUsuario",
-          KeyConditionExpression: "usuario = :usuario AND begins_with(fechaHora, :fecha)",
-          ExpressionAttributeValues: { ":usuario": usuario, ":fecha": fecha },
-          ExclusiveStartKey: desde,
+          KeyConditionExpression: `usuario = :usuario AND ${condicionFechaHora}`,
+          ExpressionAttributeValues: valores,
+          ExclusiveStartKey: siguiente,
         }),
       );
       items.push(...((res.Items ?? []) as ItemReserva[]));
-      desde = res.LastEvaluatedKey;
-    } while (desde);
+      siguiente = res.LastEvaluatedKey;
+    } while (siguiente);
     return items.map(deItem);
   }
 

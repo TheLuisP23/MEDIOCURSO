@@ -117,6 +117,18 @@ describe("ReservarBloque", () => {
     expect((screen.getByLabelText("Fecha") as HTMLInputElement).value).toBe("2026-11-06");
   });
 
+  it("CA-17: la grilla se recarga cuando cambia version (por ejemplo, tras cancelar)", async () => {
+    const { consultasDe } = simularApi();
+    const props = { codigo: "20231234", alReservar: vi.fn(), ahora };
+    const { rerender } = render(<ReservarBloque {...props} version={0} />);
+    await elegir("LAB-102", "2026-11-06");
+    await screen.findByRole("button", { name: "Reservar 10:00" });
+
+    rerender(<ReservarBloque {...props} version={1} />);
+
+    await waitFor(() => expect(consultasDe("2026-11-06")).toBe(2));
+  });
+
   it("CA-13: con 409 BLOQUE_OCUPADO avisa que alguien lo reservó y recarga la grilla", async () => {
     const { consultasDe } = simularApi(() =>
       json({ codigo: "BLOQUE_OCUPADO", mensaje: "Ocupado." }, 409),

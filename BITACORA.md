@@ -164,3 +164,22 @@ Formato de cada entrada:
   (siguiente PR). Luego despliegue (spec 005, T10).
 - **Bloqueos / preguntas para la otra persona:** B, revisa por favor
   `ReservarBloque.tsx` y `MisReservas.tsx`: ahora son tuyos para mantener.
+
+## 2026-10-20 20:50 — A (Claude Code) — rama `feat/004-mis-reservas`
+- **Spec/tareas:** 004 · T1–T5 (backend era de B; hecho por A a pedido de A)
+- **Hecho:** Spec 004 aprobada (P1–P3 respondidas), planificada e implementada:
+  `GET /api/reservas/mias` (CA-14), `DELETE /api/reservas/:id` (CA-15),
+  RN-08…RN-10, repos `obtener`/`eliminar`/`delUsuarioDesde` (memoria y
+  DynamoDB), sección `MisReservas` con confirmación (CA-16) y recarga cruzada
+  con la grilla (CA-17). Spec **Implementada**. Prueba de punta a punta con
+  los builds de producción (`vite preview` + `dist/server.mjs`): reservar 201,
+  doble reserva 409, mis reservas, cancelar ajena 403, cancelar propia 204.
+- **Estado de check:** verde (backend 47/47, frontend 27/27).
+- **Decisiones:** orden de errores al cancelar 401 → 404 → 403 → 422 (P3) para
+  no revelar horarios ajenos; 60 minutos exactos sí permiten cancelar (P2).
+- **Pendiente / siguiente paso:**
+  - A: mergear en orden #12 (Terraform) → PR de `feat/002-003-front` → PR de
+    esta rama; el merge del #12 hace el primer despliegue (spec 005, T10).
+  - B: spec 005 T11 (verificar CA-21, CA-23, CA-24 en `docs/informe/experimentos.md`)
+    y T12 (demo CA-22 con dos celulares) cuando la app esté en AWS.
+- **Bloqueos / preguntas para la otra persona:** ninguno.
