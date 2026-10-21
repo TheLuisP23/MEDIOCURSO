@@ -1,59 +1,96 @@
 # Despliegue en AWS (spec 005)
 
-El despliegue es automático: cada merge a `main` ejecuta el workflow
-**Despliegue** (`.github/workflows/deploy.yml`), que:
+La app corre en una **EC2** descrita con **Terraform** (`infra/`) y se despliega
+**sola** en cada merge a `main` con el workflow **Despliegue**
+(`.github/workflows/deploy.yml`, ADR 0002). En cada ejecución:
 
-1. corre `npm run check` y `npm run build`;
-2. crea/actualiza la infraestructura con SAM (`infra/template.yaml`);
-3. sube el frontend a S3 e invalida la caché de CloudFront;
-4. muestra la URL pública en el resumen del job.
+1. corre `npm run check` y `npm run build`; si fallan, no toca AWS (CA-23);
+2. entra a AWS por **OIDC** (sin claves guardadas en GitHub) y aplica Terraform;
+3. sube `backend/dist` + `frontend/dist` como `versiones/<commit>.tar.gz` al
+   bucket de artefactos;
+4. ordena a la EC2, por **SSM**, instalar esa versión y reiniciar el servicio;
+5. comprueba `GET /api/health` y muestra la URL en el resumen del job.
 
-Queda **apagado** hasta que configures lo de abajo. Lo hace la persona dueña
-de la cuenta AWS (A).
+En cada PR, el CI valida el Terraform (`fmt` + `validate`) y, si el despliegue
+está activo, muestra el `terraform plan` (CA-18).
 
-## Opción 1 — Cuenta AWS propia (recomendada)
+Queda **apagado** hasta completar los pasos de abajo. Los hace **A**, dueño de
+la cuenta AWS.
 
-1. En AWS, crea un usuario IAM `github-deploy` con acceso programático.
-   Para un proyecto de curso basta la política `AdministratorAccess`
-   (en un trabajo real se limitaría a lo necesario).
-2. Crea una **alerta de presupuesto** (Billing → Budgets) de 5 USD.
-3. En GitHub: *Settings → Secrets and variables → Actions*:
-   - **Secrets:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-   - **Variables:** `DESPLIEGUE_ACTIVO` = `true`, `AWS_REGION` = `us-east-1`
-4. Ve a *Actions → Despliegue → Run workflow* (o haz merge a `main`).
-5. Abre la URL del resumen y prueba `/api/health`.
+## 1. Arranque inicial (una sola vez)
 
-## Opción 2 — AWS Academy Learner Lab
-
-Learner Lab no permite crear roles IAM y sus credenciales **caducan** al
-cerrar la sesión del laboratorio (≈4 h).
-
-1. Inicia el lab y en *AWS Details* copia las tres credenciales.
-2. En GitHub agrega los secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-   **y** `AWS_SESSION_TOKEN`.
-3. Variables: `DESPLIEGUE_ACTIVO` = `true`, `AWS_REGION` = `us-east-1`,
-   `LAB_ROLE_ARN` = `arn:aws:iam::<tu-cuenta>:role/LabRole`
-   (el número de cuenta sale en la consola, arriba a la derecha).
-4. Ejecuta el workflow. **Cada nueva sesión del lab** hay que volver a pegar
-   los tres secrets antes de desplegar.
-
-> Si Learner Lab rechaza algún recurso (por ejemplo CloudFront), anótenlo en
-> la bitácora y abran un ADR: la alternativa es servir el frontend desde S3
-> como sitio web estático y configurar CORS en la API.
-
-## Desplegar a mano (para probar)
-
-Requiere AWS CLI y SAM CLI instalados y configurados (`aws configure`):
+Requisitos: Terraform ≥ 1.10 y AWS CLI configurada (`aws sts get-caller-identity`
+debe mostrar tu cuenta).
 
 ```bash
-npm run build
-sam deploy --template-file infra/template.yaml --stack-name reserva-labs \
-  --resolve-s3 --capabilities CAPABILITY_IAM
+cd infra/bootstrap
+terraform init
+terraform apply
 ```
 
-## Borrar todo al terminar el curso
+Crea el bucket del estado de Terraform y el rol `reserva-labs-github`. Detalles
+y problemas comunes en `infra/bootstrap/README.md`.
+
+## 2. Variables de GitHub
+
+*Settings → Secrets and variables → Actions → **Variables*** (no secrets):
+
+| Variable | Valor |
+|----------|-------|
+| `AWS_REGION` | `terraform output -raw region` (normalmente `us-east-1`) |
+| `AWS_ROLE_ARN` | `terraform output -raw rol_github_arn` |
+| `TF_STATE_BUCKET` | `terraform output -raw bucket_estado` |
+| `DESPLIEGUE_ACTIVO` | `true` (actívala al final) |
+
+Con la CLI de GitHub, desde `infra/bootstrap`:
 
 ```bash
-aws s3 rm s3://<BucketFrontend> --recursive
-sam delete --stack-name reserva-labs
+gh variable set AWS_REGION      --body "$(terraform output -raw region)"
+gh variable set AWS_ROLE_ARN    --body "$(terraform output -raw rol_github_arn)"
+gh variable set TF_STATE_BUCKET --body "$(terraform output -raw bucket_estado)"
+gh variable set DESPLIEGUE_ACTIVO --body true
 ```
+
+## 3. Primer despliegue
+
+*Actions → Despliegue → Run workflow* (o un merge a `main`). La primera vez
+tarda **5–10 minutos**: crea la EC2 y espera a que instale Node y nginx.
+La URL (`http://<ip>`) aparece en el resumen del job; prueba `<url>/api/health`.
+
+Recomendado: crea una **alerta de presupuesto** (Billing → Budgets) de 5 USD.
+
+## Desplegar o revisar a mano
+
+Con la AWS CLI configurada, desde `infra/`:
+
+```bash
+terraform init -backend-config="bucket=<TF_STATE_BUCKET>" -backend-config="region=us-east-1"
+terraform plan       # qué cambiaría
+terraform output     # URL, id de la instancia, bucket, tabla
+```
+
+No hagas `terraform apply` a mano mientras corre el workflow (el bloqueo del
+estado lo impide, pero te hará esperar).
+
+## Diagnosticar la EC2 (sin SSH)
+
+```bash
+aws ssm start-session --target <id_instancia>   # requiere el plugin de Session Manager
+sudo journalctl -u reserva-labs -n 50            # logs del backend
+sudo tail -n 50 /var/log/cloud-init-output.log   # logs del arranque
+```
+
+## Costos y apagado
+
+- La EC2 `t4g.micro` y su IPv4 pública **cobran por hora** aunque nadie use la
+  app. DynamoDB y S3 cuestan casi cero con poco uso.
+- **Pausar** sin perder nada: `aws ec2 stop-instances --instance-ids <id>`
+  (la IP elástica se mantiene; mientras está detenida se cobra solo el disco y la IP).
+  Para volver: `aws ec2 start-instances --instance-ids <id>`.
+- **Borrar todo al terminar el curso:**
+  1. Pon `DESPLIEGUE_ACTIVO` en `false`.
+  2. Quita `prevent_destroy` de `infra/dynamodb.tf` (protege las reservas a
+     propósito) y, desde `infra/`, ejecuta `terraform destroy`.
+  3. Desde `infra/bootstrap/`: vacía el bucket del estado
+     (`aws s3 rm s3://<bucket_estado> --recursive`, incluidas sus versiones),
+     quita su `prevent_destroy` y ejecuta `terraform destroy`.

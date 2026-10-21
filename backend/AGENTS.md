@@ -5,7 +5,8 @@ Complementa al `AGENTS.md` de la raíz (léelo primero).
 ## Stack
 
 Node 22 · TypeScript estricto · Hono · Vitest · AWS SDK v3 (DynamoDB).
-El mismo `crearApp()` corre en local (`src/server.ts`) y en Lambda (`src/lambda.ts`).
+El mismo `crearApp()` corre en local y en la EC2: `src/server.ts`, empaquetado por
+`npm run build` en `dist/server.mjs` con sus dependencias incluidas (spec 005).
 
 ## Estructura obligatoria
 

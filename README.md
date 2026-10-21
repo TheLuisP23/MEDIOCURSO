@@ -42,11 +42,11 @@ reserva-labs/
 │   ├── despliegue.md      ← cómo activar el despliegue a AWS
 │   ├── adr/               ← decisiones de arquitectura
 │   └── informe/           ← registro de experimentos para el informe
-├── backend/               ← API Hono (Node 22) · local o AWS Lambda
+├── backend/               ← API Hono (Node 22) · local o en una EC2
 │   └── AGENTS.md
 ├── frontend/              ← React + Vite
 │   └── AGENTS.md
-├── infra/template.yaml    ← AWS SAM: Lambda, API Gateway, DynamoDB, S3, CloudFront
+├── infra/                 ← Terraform: EC2 (nginx + Node), DynamoDB, S3 · bootstrap/ (estado + OIDC)
 ├── .agents/skills/        ← skills compartidas (Codex) ─┐ sincronizadas con
 ├── .claude/skills/        ← copia para Claude Code ─────┘ npm run sync:skills
 ├── .claude/settings.json  ← permisos y hook de inicio de sesión de Claude Code
@@ -82,5 +82,5 @@ configuración de un agente, no.
 | `npm run dev` | Backend + frontend en local |
 | `npm run check` | Todo lo que debe estar verde antes de un commit |
 | `npm run contexto` | Resumen del estado del repo y de la bitácora |
-| `npm run build` | Build de producción (Lambda + sitio estático) |
+| `npm run build` | Build de producción (servidor Node + sitio estático) |
 | `npm run sync:skills` | Copia `.agents/skills` → `.claude/skills` |

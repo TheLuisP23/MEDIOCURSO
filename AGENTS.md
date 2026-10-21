@@ -7,8 +7,9 @@ no dupliques reglas en otros archivos de configuración de agentes.
 ## Qué es este proyecto
 
 Sistema web para **reservar laboratorios** de la universidad por bloques de una
-hora. Monorepo: `backend/` (API Hono en Node 22, corre local o en AWS Lambda) y
-`frontend/` (React + Vite). Se despliega en AWS con SAM (`infra/`).
+hora. Monorepo: `backend/` (API Hono en Node 22, corre local o en una EC2) y
+`frontend/` (React + Vite). Se despliega en AWS con Terraform (`infra/`) y
+GitHub Actions.
 Lo desarrollan dos personas: **A** (usa Claude Code) y **B** (usa Codex).
 
 ## Antes de hacer cualquier cosa, lee en este orden
@@ -53,7 +54,7 @@ Usa las skills de `.agents/skills/` (en Claude Code también están en `.claude/
 - **Nunca** hagas commit ni push a `main`. Trabaja en la rama actual o crea una
   `feat/NNN-descripcion` / `spec/NNN-descripcion`.
 - **Nunca** cambies `docs/api/openapi.yaml`, `specs/CONSTITUCION.md` ni
-  `infra/template.yaml` como efecto secundario: solo si la tarea lo pide.
+  `infra/` como efecto secundario: solo si la tarea lo pide.
 - **Nunca** implementes algo que no esté en una spec Aprobada. Si falta algo,
   propón el cambio a la spec y detente.
 - **Nunca** uses `--no-verify` para saltarte el hook de pre-commit.
