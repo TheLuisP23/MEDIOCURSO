@@ -16,4 +16,4 @@ Requisito: el PR #5 (backend de la spec 001) debe estar en `main`.
 - [x] T8 [F] `CodigoAlumno` con test de formato y guardado en `localStorage` (dueño: B)
 - [x] T9 [F] Tests CA-09 y CA-10 de `ReservarBloque` (dueño: B)
 - [x] T10 [F] Implementar `ReservarBloque` y `GrillaBloques` y usarlos en `App.tsx` (dueño: B)
-- [ ] T11 [D] Marcar spec como Implementada y actualizar índice en `specs/README.md` (dueño: B)
+- [x] T11 [D] Marcar spec como Implementada y actualizar índice en `specs/README.md` (dueño: B)
