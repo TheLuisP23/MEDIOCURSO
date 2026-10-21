@@ -1,6 +1,6 @@
 # Spec 004 — Mis reservas y cancelación
 
-- **Estado:** En curso
+- **Estado:** Implementada
 - **Dueños:** backend: B · frontend: A  ← *roles invertidos a propósito*
 - **Depende de:** 002
 
