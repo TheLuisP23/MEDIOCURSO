@@ -83,4 +83,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(nueva),
     }),
+
+  misReservas: () => pedir<Reserva[]>("/reservas/mias"),
+
+  cancelarReserva: (id: string) =>
+    pedir<void>(`/reservas/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };

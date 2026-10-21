@@ -3,6 +3,7 @@ import { api } from "./api";
 import { leerCodigoAlumno } from "./codigoAlumno";
 import { CodigoAlumno } from "./componentes/CodigoAlumno";
 import { ListaLaboratorios } from "./componentes/ListaLaboratorios";
+import { MisReservas } from "./componentes/MisReservas";
 import { ReservarBloque } from "./componentes/ReservarBloque";
 
 type EstadoApi = "cargando" | "ok" | "caida";
@@ -12,6 +13,7 @@ export function App() {
   const [codigo, setCodigo] = useState<string | null>(() => leerCodigoAlumno());
   // Se incrementa cuando cambian las reservas, para que las secciones se recarguen.
   const [version, setVersion] = useState(0);
+  const recargar = () => setVersion((v) => v + 1);
 
   useEffect(() => {
     api
@@ -32,7 +34,8 @@ export function App() {
         <CodigoAlumno codigo={codigo} alCambiar={setCodigo} />
       </header>
       <ListaLaboratorios />
-      <ReservarBloque codigo={codigo} version={version} alReservar={() => setVersion((v) => v + 1)} />
+      <ReservarBloque codigo={codigo} version={version} alReservar={recargar} />
+      <MisReservas codigo={codigo} version={version} alCancelar={recargar} />
     </main>
   );
 }
