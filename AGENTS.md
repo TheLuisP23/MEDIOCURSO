@@ -77,4 +77,4 @@ Usa las skills de `.agents/skills/` (en Claude Code también están en `.claude/
 Cuando un agente cometa un error que se repite, agrega aquí una regla que lo
 evite (una línea, con fecha y spec). El harness mejora con cada error.
 
-- (vacío por ahora)
+- 2026-10-20 (001): En "Pendiente / siguiente paso" de `BITACORA.md` va la próxima tarea de la spec (archivo, función o test), no los pasos de git de la sesión actual (commit, push, abrir PR).
