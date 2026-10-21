@@ -183,3 +183,22 @@ Formato de cada entrada:
   - B: spec 005 T11 (verificar CA-21, CA-23, CA-24 en `docs/informe/experimentos.md`)
     y T12 (demo CA-22 con dos celulares) cuando la app esté en AWS.
 - **Bloqueos / preguntas para la otra persona:** ninguno.
+
+## 2026-10-20 21:20 — A (Claude Code) — rama `docs/005-primer-despliegue`
+- **Spec/tareas:** 005 · T10
+- **Hecho:** Primer despliegue en producción con el workflow Despliegue (merge
+  del #12; luego #14 y #15). **URL pública: http://184.196.255.55**
+  (EC2 t4g.micro en us-east-1d, IP elástica). Prueba contra producción con
+  DynamoDB real: reservar 201, mismo bloque 409 `BLOQUE_OCUPADO`, **10 reservas
+  simultáneas al mismo bloque → 1×201 y 9×409** (RN-05 en AWS), mis reservas
+  200, cancelar ajena 403, cancelar propia 204. Datos de prueba (`PRUEBA0x`,
+  `SIMUL0x`, 2026-10-23) cancelados al terminar.
+- **Estado de check:** verde. Despliegues de #12 y #15 en verde (el de #14 se
+  canceló solo porque lo reemplazó el de #15).
+- **Decisiones:** las ramas mergeadas se conservan en GitHub como registro (pedido de A).
+- **Pendiente / siguiente paso:** B: spec 005 T11 — verificar CA-21 (crear una
+  reserva, redesplegar con *Actions → Despliegue → Run workflow* y comprobar que
+  sigue), CA-23 y CA-24, con evidencias en `docs/informe/experimentos.md`; T12 —
+  demo CA-22 con dos celulares en http://184.196.255.55 y marcar la spec 005 como Implementada.
+- **Bloqueos / preguntas para la otra persona:** ninguno. Costo: la EC2 cobra por
+  hora; para pausarla ver `docs/despliegue.md` (Costos y apagado).

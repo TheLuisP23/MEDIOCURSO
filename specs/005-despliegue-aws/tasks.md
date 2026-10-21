@@ -13,6 +13,6 @@ Formato obligatorio de línea: `- [ ] T<n> [B|F|D] descripción (dueño: A|B)`.
 - [x] T7 [D] Reescribir `deploy.yml`: check, OIDC, `terraform apply`, artefacto a S3, SSM y verificación de `/api/health` (CA-19, CA-20, CA-23) (dueño: A)
 - [x] T8 [F] Actualizar comentarios de CloudFront en `vite.config.ts` y `frontend/AGENTS.md` (dueño: B)
 - [x] T9 [D] Reescribir `docs/despliegue.md` y actualizar `docs/arquitectura.md`, `AGENTS.md`, `backend/AGENTS.md` y `README.md` (dueño: A)
-- [ ] T10 [D] Activar `DESPLIEGUE_ACTIVO`, primer despliegue real y URL en la bitácora (CA-19, CA-20) (dueño: A)
+- [x] T10 [D] Activar `DESPLIEGUE_ACTIVO`, primer despliegue real y URL en la bitácora (CA-19, CA-20) (dueño: A)
 - [ ] T11 [D] Verificar CA-21, CA-23 y CA-24 y dejar evidencias en `docs/informe/experimentos.md` (dueño: B)
 - [ ] T12 [D] Verificar CA-22 cuando la spec 003 esté implementada; marcar la spec como Implementada (dueño: B)
