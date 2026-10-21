@@ -1,6 +1,6 @@
 # Spec 003 — Conflictos y concurrencia
 
-- **Estado:** En curso
+- **Estado:** Implementada
 - **Dueños:** backend: A · frontend: B
 - **Depende de:** 002
 
