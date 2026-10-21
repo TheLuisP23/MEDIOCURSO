@@ -41,5 +41,10 @@ No hace falta ningún *secret* de AWS.
 - Si la cuenta ya tenía un proveedor OIDC de GitHub (lo usa otro proyecto),
   `apply` falla con `EntityAlreadyExists`. Impórtalo antes de aplicar:
   `terraform import aws_iam_openid_connect_provider.github arn:aws:iam::<cuenta>:oidc-provider/token.actions.githubusercontent.com`
+- Si GitHub Actions falla con `Not authorized to perform sts:AssumeRoleWithWebIdentity`,
+  revisa el formato del `sub` del token con
+  `gh api repos/<dueño>/<repo>/actions/oidc/customization/sub`. Este repo usa el
+  formato inmutable (`repo:dueño@id/repo@id:...`); el rol acepta ese y el clásico
+  (variables `repositorio_github` y `repositorio_github_inmutable`).
 - El bucket tiene `prevent_destroy`: `terraform destroy` se niega a borrarlo
   a propósito. Al terminar el curso, ver `docs/despliegue.md`.

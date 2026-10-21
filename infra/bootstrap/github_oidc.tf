@@ -21,11 +21,15 @@ data "aws_iam_policy_document" "confianza_github" {
       values   = ["sts.amazonaws.com"]
     }
 
-    # Solo los workflows de este repositorio (cualquier rama o PR del propio repo).
+    # Solo los workflows de este repositorio (cualquier rama o PR del propio repo),
+    # en el formato clásico o en el inmutable con IDs.
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.repositorio_github}:*"]
+      values = [
+        "repo:${var.repositorio_github}:*",
+        "repo:${var.repositorio_github_inmutable}:*",
+      ]
     }
   }
 }
