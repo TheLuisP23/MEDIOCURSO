@@ -1,6 +1,6 @@
 # Spec 004 — Mis reservas y cancelación
 
-- **Estado:** Borrador
+- **Estado:** En curso
 - **Dueños:** backend: B · frontend: A  ← *roles invertidos a propósito*
 - **Depende de:** 002
 
@@ -45,3 +45,10 @@ usará, liberando el bloque para otros.
 ## Preguntas abiertas
 
 - **P1** — ¿Mostrar reservas de hoy que ya terminaron? → *Respuesta:* No (CA-14).
+  Un bloque que empezó pero aún no termina **sí** se muestra (no se puede cancelar, RN-09).
+- **P2** — ¿"Hasta 1 hora antes" incluye exactamente 60 minutos? → *Respuesta:* Sí:
+  se puede cancelar si faltan 60 minutos o más para el inicio del bloque.
+- **P3** — Si una petición incumple varias reglas, ¿qué error gana? → *Respuesta:*
+  en este orden: sin `X-Usuario` (401) → la reserva no existe (404, RN-10) →
+  no es del usuario (403, RN-08) → demasiado tarde (422, RN-09). Así no se
+  revela a otros usuarios el horario de una reserva ajena.
