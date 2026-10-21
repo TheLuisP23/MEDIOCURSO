@@ -17,3 +17,9 @@ CLAUDE.local.md
 
 # Guía interna del equipo (no se sube al repositorio)
 GUIA_EQUIPO.md
+
+# Terraform: estado y caché locales (el lock file .terraform.lock.hcl sí se sube)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan

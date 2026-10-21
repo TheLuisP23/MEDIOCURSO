@@ -4,7 +4,7 @@ Leyenda: `[B]` backend · `[F]` frontend · `[D]` docs/infra.
 Cada tarea debe poder hacerse y commitearse sola, con `npm run check` en verde.
 Formato obligatorio de línea: `- [ ] T<n> [B|F|D] descripción (dueño: A|B)`.
 
-- [ ] T1 [D] Crear `infra/bootstrap/` (bucket de estado, OIDC, rol de GitHub, README) e ignorar su `terraform.tfstate` (dueño: A)
+- [x] T1 [D] Crear `infra/bootstrap/` (bucket de estado, OIDC, rol de GitHub, README) e ignorar su `terraform.tfstate` (dueño: A)
 - [ ] T2 [D] Ejecutar el bootstrap con la cuenta de A y configurar las variables de GitHub `AWS_REGION`, `AWS_ROLE_ARN` y `TF_STATE_BUCKET` (dueño: A)
 - [ ] T3 [D] Crear `infra/` con versiones, variables, DynamoDB, bucket de artefactos, red e IAM; borrar `infra/template.yaml` (dueño: A)
 - [ ] T4 [D] Agregar `ec2.tf`, `arranque.sh.tftpl` (Node 22, nginx, systemd) y `outputs.tf` (dueño: A)
