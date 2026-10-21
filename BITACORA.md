@@ -123,3 +123,26 @@ Formato de cada entrada:
   - Ejecutar `npm run check`.
   - Completar la revisión del cambio, crear el commit y abrir un PR hacia `main`.
 - **Bloqueos / preguntas para la otra persona:** ninguno identificado.
+
+## 2026-10-20 19:45 — A (Claude Code) — rama `feat/005-terraform`
+- **Spec/tareas:** 005 · T1, T3, T4, T5, T6, T7, T9
+- **Hecho:** Terraform completo: `infra/bootstrap/` (bucket del estado + OIDC +
+  rol de GitHub) e `infra/` (DynamoDB, EC2 t4g.micro con nginx + Node + systemd,
+  IP elástica, bucket de artefactos, IAM). Backend empaquetado para Node
+  (`dist/server.mjs`). CI valida Terraform (job `infra`) y muestra el plan en
+  PRs; `deploy.yml` reescrito (check → OIDC → apply → S3 → SSM → /api/health).
+  Docs actualizadas. `infra/template.yaml` y `backend/src/lambda.ts` borrados.
+- **Estado de check:** verde (backend 34/34, frontend 8/8). `terraform fmt` y
+  `validate` en verde en ambos directorios. Nada aplicado todavía en AWS.
+- **Decisiones:** Node 22.12.0 desde nodejs.org (AL2023 no trae `node` en la ruta
+  estándar); el bundle ESM necesita el banner `createRequire` (sin él falla con
+  "Dynamic require"; verificado ejecutándolo fuera del repo). `ignore_changes = [ami]`
+  para que una AMI nueva no reemplace la EC2. Un comando en el despliegue
+  (`desplegar-reserva-labs`) queda instalado en la EC2 por el arranque.
+- **Pendiente / siguiente paso:**
+  - A: T2 — `cd infra/bootstrap && terraform init && terraform apply` y crear las
+    variables de GitHub (`infra/bootstrap/README.md`). Luego T10: `DESPLIEGUE_ACTIVO=true`
+    y ejecutar el workflow Despliegue.
+  - B: T8 — en `frontend/vite.config.ts` y `frontend/AGENTS.md`, cambiar las
+    menciones a CloudFront/API Gateway por nginx en la EC2.
+- **Bloqueos / preguntas para la otra persona:** ninguno.
