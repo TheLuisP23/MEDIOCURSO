@@ -5,9 +5,38 @@ data "aws_ssm_parameter" "ami_al2023" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
 }
 
+# No todas las zonas ofrecen todos los tipos (en us-east-1, la "e" no tiene t4g).
+# Se elige una subred por defecto de una zona que sí lo ofrezca, siempre la misma.
+data "aws_ec2_instance_type_offerings" "zonas" {
+  location_type = "availability-zone"
+
+  filter {
+    name   = "instance-type"
+    values = [var.tipo_instancia]
+  }
+}
+
+data "aws_subnets" "app" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.defecto.id]
+  }
+
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = data.aws_ec2_instance_type_offerings.zonas.locations
+  }
+}
+
 resource "aws_instance" "app" {
   ami                    = data.aws_ssm_parameter.ami_al2023.insecure_value
   instance_type          = var.tipo_instancia
+  subnet_id              = sort(data.aws_subnets.app.ids)[0]
   iam_instance_profile   = aws_iam_instance_profile.app.name
   vpc_security_group_ids = [aws_security_group.app.id]
 
