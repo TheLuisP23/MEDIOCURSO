@@ -1,4 +1,4 @@
-// Servidor local para desarrollo (npm run dev). En AWS se usa src/lambda.ts.
+// Servidor HTTP de la API: local (npm run dev) y en la EC2 (dist/server.mjs, spec 005).
 import { serve } from "@hono/node-server";
 import { crearApp } from "./app.js";
 
